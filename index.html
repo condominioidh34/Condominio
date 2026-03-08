@@ -966,32 +966,6 @@
         }
       },
       
-      async loadLatestBackup() {
-        if (!this.isSignedIn) return null;
-        
-        try {
-          // Listar backups (já ordenados por data, mais recente primeiro)
-          const backups = await this.listBackups();
-          
-          if (!backups || backups.length === 0) {
-            console.log('Nenhum backup encontrado no Google Drive');
-            return null;
-          }
-          
-          // Pegar o mais recente (primeiro da lista)
-          const latest = backups[0];
-          console.log('Backup mais recente:', latest.name, 'de', latest.modifiedTime);
-          
-          // Fazer download
-          const data = await this.downloadBackup(latest.id);
-          
-          return data;
-        } catch (error) {
-          console.error('Error loading latest backup:', error);
-          return null;
-        }
-      },
-      
       async autoSync(state) {
         if (!this.autoSyncEnabled || !this.isSignedIn) return;
         
@@ -1029,6 +1003,22 @@
     }
     
     async function getState() {
+      // PRIORIDADE 1: Tentar carregar do Google Drive (fonte primária)
+      if (GDrive.isSignedIn) {
+        try {
+          const driveData = await GDrive.loadLatestBackup();
+          if (driveData) {
+            console.log('✅ Dados carregados do Google Drive');
+            // Guardar em cache local
+            await DB.write(driveData, 'state', 'main');
+            return normalizeState(driveData);
+          }
+        } catch (error) {
+          console.warn('⚠️ Erro ao carregar do Drive, usando cache local:', error);
+        }
+      }
+      
+      // PRIORIDADE 2: Usar cache local (fallback)
       const raw = await DB.read('state', 'main');
       return normalizeState(raw || {});
     }
