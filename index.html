@@ -487,6 +487,63 @@
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
+    
+    /* Dashboard Charts */
+    .chart-container {
+      margin-top: 16px;
+    }
+    .chart-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .chart-label {
+      min-width: 80px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .chart-bar-bg {
+      flex: 1;
+      height: 24px;
+      background: var(--bg-alt);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    .chart-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 12px;
+      transition: width 0.5s ease;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+    }
+    .chart-bar-fill.success {
+      background: linear-gradient(90deg, var(--success), #22c55e);
+    }
+    .chart-bar-fill.warning {
+      background: linear-gradient(90deg, var(--warning), #f59e0b);
+    }
+    .chart-bar-fill.danger {
+      background: linear-gradient(90deg, var(--danger), #ef4444);
+    }
+    .chart-value {
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .chart-total {
+      min-width: 70px;
+      text-align: right;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+    }
   </style>
 </head>
 <body>
@@ -499,7 +556,7 @@
     // CONSTANTS & CONFIG
     // ============================================
     const GOOGLE_CLIENT_ID = '644033784604-mng4dqqg3bkeoqfeodv3qmjtq2sudt0g.apps.googleusercontent.com';
-    const GOOGLE_API_KEY = 'AIzaSyDZ62XDIfT4cXmnBzXkJ7Ci6Gf6LKbKhLs';
+    const GOOGLE_API_KEY = 'AIzaSyDZ62XDIfT4cXmnBzXkJ7Ci6Gf6LKbKhLs'; // API Key opcional - deixa vazio
     const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
     
@@ -558,7 +615,7 @@
     // DATABASE (IndexedDB)
     // ============================================
     const DB = {
-      name: 'CondoProDB',
+      name: 'Condominio',
       version: 2,
       async open() {
         return new Promise((resolve, reject) => {
@@ -878,7 +935,7 @@
             password: 'admin123',
             role: 'admin',
             unit: 'Administração',
-            active: false,
+            active: true,
             phone: '',
             nif: '',
             quota: 0
@@ -1075,8 +1132,35 @@
         const yearPayments = this.state.payments.filter(p => new Date(p.month).getFullYear() === this.dashboardYear);
         const totalReceived = yearPayments.filter(p => p.status === 'Pago').reduce((sum, p) => sum + p.amount, 0);
         const totalPending = yearPayments.filter(p => p.status === 'Pendente').reduce((sum, p) => sum + p.amount, 0);
+        const totalExpected = yearPayments.reduce((sum, p) => sum + p.amount, 0);
         const activeCondos = this.state.users.filter(u => u.active && u.role === 'user').length;
         const openIssues = this.state.issues.filter(i => i.status === 'Pendente').length;
+        
+        // Gráfico de pagamentos por mês
+        const monthlyData = {};
+        yearPayments.forEach(p => {
+          const month = monthPT(p.month);
+          if (!monthlyData[month]) {
+            monthlyData[month] = { received: 0, pending: 0, total: 0 };
+          }
+          monthlyData[month].total += p.amount;
+          if (p.status === 'Pago') {
+            monthlyData[month].received += p.amount;
+          } else {
+            monthlyData[month].pending += p.amount;
+          }
+        });
+        
+        const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
+          const [monthA, yearA] = a.split('/');
+          const [monthB, yearB] = b.split('/');
+          const dateA = new Date(yearA, ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].indexOf(monthA));
+          const dateB = new Date(yearB, ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].indexOf(monthB));
+          return dateA - dateB;
+        });
+        
+        const receivedPercent = totalExpected > 0 ? (totalReceived / totalExpected * 100).toFixed(1) : 0;
+        const pendingPercent = totalExpected > 0 ? (totalPending / totalExpected * 100).toFixed(1) : 0;
         
         return `
           <div class="grid stats">
@@ -1084,6 +1168,7 @@
               <div>
                 <div class="muted">Total Recebido (${this.dashboardYear})</div>
                 <div class="stat-value">${money(totalReceived)}</div>
+                <div style="margin-top: 4px; font-size: 13px; color: var(--success);">${receivedPercent}% do total</div>
               </div>
               <div class="stat-icon success">${icon('euro')}</div>
             </div>
@@ -1092,6 +1177,7 @@
               <div>
                 <div class="muted">Total Pendente</div>
                 <div class="stat-value">${money(totalPending)}</div>
+                <div style="margin-top: 4px; font-size: 13px; color: var(--warning);">${pendingPercent}% do total</div>
               </div>
               <div class="stat-icon warning">${icon('alert')}</div>
             </div>
@@ -1100,6 +1186,7 @@
               <div>
                 <div class="muted">Condóminos Ativos</div>
                 <div class="stat-value">${activeCondos}</div>
+                <div style="margin-top: 4px; font-size: 13px; color: var(--muted);">${this.state.users.filter(u => u.role === 'user').length} total</div>
               </div>
               <div class="stat-icon">${icon('users')}</div>
             </div>
@@ -1108,10 +1195,54 @@
               <div>
                 <div class="muted">Ocorrências Abertas</div>
                 <div class="stat-value">${openIssues}</div>
+                <div style="margin-top: 4px; font-size: 13px; color: var(--muted);">${this.state.issues.length} total</div>
               </div>
               <div class="stat-icon danger">${icon('alert')}</div>
             </div>
           </div>
+          
+          ${sortedMonths.length > 0 ? `
+            <div class="card" style="margin-top: 18px;">
+              <div class="card-header">
+                <h3>Evolução Mensal (${this.dashboardYear})</h3>
+              </div>
+              <div class="chart-container">
+                ${sortedMonths.map(month => {
+                  const data = monthlyData[month];
+                  const maxValue = Math.max(...Object.values(monthlyData).map(d => d.total));
+                  const receivedWidth = maxValue > 0 ? (data.received / maxValue * 100) : 0;
+                  const pendingWidth = maxValue > 0 ? (data.pending / maxValue * 100) : 0;
+                  
+                  return `
+                    <div style="margin-bottom: 20px;">
+                      <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <strong style="font-size: 13px;">${month}</strong>
+                        <span style="font-size: 13px; color: var(--muted);">${money(data.total)}</span>
+                      </div>
+                      <div class="chart-bar">
+                        <div class="chart-label" style="min-width: 70px; font-size: 12px;">Recebido</div>
+                        <div class="chart-bar-bg">
+                          <div class="chart-bar-fill success" style="width: ${receivedWidth}%">
+                            ${receivedWidth > 15 ? `<span class="chart-value">${money(data.received)}</span>` : ''}
+                          </div>
+                        </div>
+                        ${receivedWidth <= 15 ? `<div class="chart-total">${money(data.received)}</div>` : '<div class="chart-total"></div>'}
+                      </div>
+                      <div class="chart-bar">
+                        <div class="chart-label" style="min-width: 70px; font-size: 12px;">Pendente</div>
+                        <div class="chart-bar-bg">
+                          <div class="chart-bar-fill warning" style="width: ${pendingWidth}%">
+                            ${pendingWidth > 15 ? `<span class="chart-value">${money(data.pending)}</span>` : ''}
+                          </div>
+                        </div>
+                        ${pendingWidth <= 15 ? `<div class="chart-total">${money(data.pending)}</div>` : '<div class="chart-total"></div>'}
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
           
           <div class="grid" style="grid-template-columns: 2fr 1fr; margin-top: 18px;">
             <div class="card">
@@ -1196,26 +1327,32 @@
       
       renderUsers() {
         if (this.currentUser.role !== 'admin') {
-          return '<div class="card"><p>Acesso negado. Apenas administradores podem gerir condóminos.</p></div>';
+          return '<div class="card"><p>Acesso negado. Apenas administradores podem gerir utilizadores.</p></div>';
         }
         
-        const users = this.state.users.filter(u => u.role === 'user');
+        const users = this.state.users;
         
         return `
           <div class="card">
             <div class="card-header">
-              <h3>Lista de Condóminos</h3>
-              <button class="btn primary sm" onclick="openUserModal()">
-                ${icon('plus')} Novo Condómino
-              </button>
+              <h3>Gestão de Utilizadores</h3>
+              <div style="display: flex; gap: 10px;">
+                <button class="btn sm" onclick="openUserModal(null, 'user')">
+                  ${icon('plus')} Novo Condómino
+                </button>
+                <button class="btn primary sm" onclick="openUserModal(null, 'admin')">
+                  ${icon('plus')} Novo Administrador
+                </button>
+              </div>
             </div>
             
-            ${users.length === 0 ? '<div class="empty"><p>Nenhum condómino registado</p></div>' : `
+            ${users.length === 0 ? '<div class="empty"><p>Nenhum utilizador registado</p></div>' : `
               <div class="table-wrap">
                 <table>
                   <thead>
                     <tr>
                       <th>Nome</th>
+                      <th>Perfil</th>
                       <th>Fração</th>
                       <th>Email</th>
                       <th>Telefone</th>
@@ -1228,6 +1365,7 @@
                     ${users.map(u => `
                       <tr>
                         <td><strong>${escapeHtml(u.name)}</strong></td>
+                        <td><span class="pill ${u.role === 'admin' ? 'danger' : ''}">${u.role === 'admin' ? 'Administrador' : 'Condómino'}</span></td>
                         <td>${escapeHtml(u.unit)}</td>
                         <td>${escapeHtml(u.email)}</td>
                         <td>${escapeHtml(u.phone || '-')}</td>
@@ -1236,7 +1374,7 @@
                         <td>
                           <div class="actions">
                             <button class="btn sm" onclick="openUserModal('${u.id}')">${icon('edit')}</button>
-                            <button class="btn sm danger" onclick="deleteUser('${u.id}')">${icon('trash')}</button>
+                            ${u.id !== app.currentUser.id ? `<button class="btn sm danger" onclick="deleteUser('${u.id}')">${icon('trash')}</button>` : ''}
                           </div>
                         </td>
                       </tr>
@@ -1641,17 +1779,29 @@
     // ============================================
     // USER MANAGEMENT
     // ============================================
-    function openUserModal(id = null) {
+    function openUserModal(id = null, defaultRole = 'user') {
       const u = id ? app.state.users.find(x => x.id === id) : {
-        name: '', email: '', password: '', unit: '', phone: '', nif: '', quota: 0, active: true
+        name: '', email: '', password: '', unit: '', phone: '', nif: '', quota: 0, active: true, role: defaultRole
       };
       
+      const isEditingSelf = id && id === app.currentUser.id;
+      const title = id ? 'Editar Utilizador' : (defaultRole === 'admin' ? 'Novo Administrador' : 'Novo Condómino');
+      
       openModal(
-        id ? 'Editar Condómino' : 'Novo Condómino',
+        title,
         `
           <div class="field">
             <label>Nome</label>
             <input id="u_name" value="${escapeHtml(u.name)}" />
+          </div>
+          
+          <div class="field">
+            <label>Perfil</label>
+            <select id="u_role" ${isEditingSelf ? 'disabled' : ''}>
+              <option value="user" ${u.role === 'user' ? 'selected' : ''}>Condómino</option>
+              <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Administrador</option>
+            </select>
+            ${isEditingSelf ? '<p class="muted" style="font-size: 12px; margin-top: 4px;">Não podes alterar o teu próprio perfil</p>' : ''}
           </div>
           
           <div class="subgrid">
@@ -1703,7 +1853,8 @@
             quota: parseFloat(byId('u_quota').value) || 0,
             phone: byId('u_phone').value.trim(),
             nif: byId('u_nif').value.trim(),
-            active: byId('u_active').checked
+            active: byId('u_active').checked,
+            role: isEditingSelf ? u.role : byId('u_role').value
           };
           
           const newPassword = byId('u_password').value.trim();
@@ -1720,7 +1871,6 @@
           } else {
             app.state.users.push({
               id: uid(),
-              role: 'user',
               ...payload
             });
           }
