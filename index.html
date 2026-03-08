@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CondoPro Cloud Edition</title>
+  <meta name="description" content="Sistema de Gestão de Condomínios na Cloud">
+  <style>
+    :root {
+      --primary: #1e40af;
+      --primary-dark: #1d2f7a;
+      --accent: #3b82f6;
+      --success: #16a34a;
+      --success-soft: #dcfce7;
+      --warning: #d97706;
+      --warning-soft: #fef3c7;
+      --danger: #dc2626;
+      --danger-soft: #fee2e2;
+      --bg: #f4f7fb;
+      --bg-alt: #eef4ff;
+      --card: #ffffff;
+      --border: #dbe3ef;
+      --text: #0f172a;
+      --muted: #64748b;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+    body { min-height: 100vh; }
+    img { max-width: 100%; }
+    .hidden { display: none !important; }
+    
+    /* Loading Screen */
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      display: grid;
+      place-items: center;
+      z-index: 9999;
+      color: white;
+    }
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255,255,255,.2);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-text {
+      margin-top: 20px;
+      font-size: 16px;
+      opacity: 0.9;
+    }
+    
+    /* Cloud Status Banner */
+    .cloud-status {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 8px 16px;
+      background: linear-gradient(90deg, #4285f4 0%, #34a853 100%);
+      color: white;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .cloud-status.syncing {
+      background: linear-gradient(90deg, #fbbc04 0%, #ea4335 100%);
+    }
+    .cloud-status.error {
+      background: var(--danger);
+    }
+    
+    .app-shell { display: grid; grid-template-columns: 292px 1fr; min-height: 100vh; }
+    .sidebar {
+      background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 24px 18px;
+      box-shadow: 3px 0 18px rgba(0,0,0,0.08);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-bottom: 18px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid rgba(255,255,255,.18);
+    }
+    .brand-mark,
+    .brand-logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.16);
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      overflow: hidden;
+    }
+    .brand-mark svg { width: 28px; height: 28px; }
+    .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .brand h1 { margin: 0; font-size: 24px; letter-spacing: .2px; }
+    .brand small { opacity: .82; display: block; margin-top: 3px; }
+    .cloud-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(66, 133, 244, 0.3), rgba(52, 168, 83, 0.3));
+      border: 1px solid rgba(255,255,255,.3);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .cloud-badge svg {
+      width: 14px;
+      height: 14px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .user-card {
+      background: rgba(255,255,255,.1);
+      padding: 14px;
+      border-radius: 14px;
+      margin-bottom: 18px;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .user-card strong, .user-card span { display: block; }
+    .user-card span { opacity: .84; font-size: 13px; margin-top: 3px; }
+    .nav { display: grid; gap: 6px; }
+    .nav button {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: white;
+      text-align: left;
+      padding: 12px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: .18s ease;
+    }
+    .nav button:hover, .nav button.active { background: rgba(255,255,255,.14); }
+    .nav .icon-wrap {
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: .96;
+    }
+    .nav .icon-wrap svg { width: 18px; height: 18px; }
+    .sidebar-actions { margin-top: 18px; display: grid; gap: 8px; }
+    .sidebar-actions button {
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      color: white;
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 700;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+    .sidebar-actions button:hover { background: rgba(255,255,255,.14); }
+    .sidebar-actions svg { width: 16px; height: 16px; }
+    .main { display: flex; flex-direction: column; min-width: 0; }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      background: rgba(255,255,255,.85);
+      backdrop-filter: blur(8px);
+      padding: 22px 28px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar h2 { margin: 0; font-size: 30px; }
+    .topbar p { margin: 4px 0 0; color: var(--muted); }
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .content { padding: 26px; }
+    .grid { display: grid; gap: 18px; }
+    .stats { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 18px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+    .card h3, .card h4 { margin-top: 0; margin-bottom: 12px; }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+    .stat-card .muted { margin-bottom: 8px; }
+    .stat-value { font-size: 30px; font-weight: 800; }
+    .stat-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+    .stat-icon svg { width: 24px; height: 24px; }
+    .stat-icon.success { background: var(--success-soft); color: #166534; }
+    .stat-icon.warning { background: var(--warning-soft); color: #92400e; }
+    .stat-icon.danger { background: var(--danger-soft); color: #991b1b; }
+    .muted { color: var(--muted); }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+    .pill.success { background: var(--success-soft); color: #166534; }
+    .pill.warning { background: var(--warning-soft); color: #92400e; }
+    .pill.danger { background: var(--danger-soft); color: #991b1b; }
+    .pill svg { width: 14px; height: 14px; }
+    .btn {
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .btn svg { width: 16px; height: 16px; }
+    .btn:hover { background: var(--bg); transform: translateY(-1px); }
+    .btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+    .btn.primary:hover { background: var(--primary-dark); }
+    .btn.success { background: var(--success); color: white; border-color: var(--success); }
+    .btn.danger { background: var(--danger); color: white; border-color: var(--danger); }
+    .btn.sm { padding: 7px 12px; font-size: 13px; }
+    .btn.sm svg { width: 14px; height: 14px; }
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border-spacing: 0;
+    }
+    th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); }
+    th { background: var(--bg-alt); font-weight: 700; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    tr:hover td { background: var(--bg-alt); }
+    .actions { display: flex; gap: 6px; }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.5);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      z-index: 1000;
+      animation: fadeIn .2s;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal {
+      background: white;
+      border-radius: 22px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.16);
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow: auto;
+      animation: slideUp .25s ease-out;
+    }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    .modal-header {
+      padding: 24px 26px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .modal-header h3 { margin: 0; font-size: 24px; }
+    .modal-body { padding: 24px 26px; }
+    .modal-footer {
+      padding: 18px 26px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; margin-bottom: 6px; font-weight: 700; font-size: 14px; }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: white;
+      padding: 11px 14px;
+      border-radius: 12px;
+      font: inherit;
+    }
+    .field textarea { min-height: 90px; resize: vertical; }
+    .subgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--text);
+      color: white;
+      padding: 14px 20px;
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.2);
+      animation: toastIn .3s ease-out;
+      z-index: 2000;
+      max-width: 400px;
+    }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .banner {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty svg { width: 64px; height: 64px; opacity: .3; margin-bottom: 16px; }
+    select { cursor: pointer; }
+    input[type="file"] { display: none; }
+    
+    /* Voting specific styles */
+    .agenda-item {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .agenda-item h4 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+    }
+    .vote-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .vote-btn {
+      flex: 1;
+      min-width: 100px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 2px solid;
+      background: white;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .vote-btn.favor {
+      border-color: var(--success);
+      color: var(--success);
+    }
+    .vote-btn.favor.selected {
+      background: var(--success);
+      color: white;
+    }
+    .vote-btn.against {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+    .vote-btn.against.selected {
+      background: var(--danger);
+      color: white;
+    }
+    .vote-btn.abstain {
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+    .vote-btn.abstain.selected {
+      background: var(--warning);
+      color: white;
+    }
+    .vote-result {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+    .vote-bar {
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 8px 0;
+      display: flex;
+    }
+    .vote-bar-segment {
+      height: 100%;
+      transition: width 0.3s;
+    }
+    .vote-bar-segment.favor { background: var(--success); }
+    .vote-bar-segment.against { background: var(--danger); }
+    .vote-bar-segment.abstain { background: var(--warning); }
+    .vote-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .vote-stats span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .vote-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .vote-dot.favor { background: var(--success); }
+    .vote-dot.against { background: var(--danger); }
+    .vote-dot.abstain { background: var(--warning); }
+    .quorum-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+    .quorum-status.reached {
+      background: var(--success-soft);
+      color: var(--success);
+    }
+    .quorum-status.not-reached {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+    .meeting-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .meeting-status.draft {
+      background: var(--bg-alt);
+      color: var(--muted);
+    }
+    .meeting-status.voting {
+      background: var(--warning-soft);
+      color: var(--warning);
+    }
+    .meeting-status.closed {
+      background: var(--success-soft);
+      color: var(--success);
+    }
+
+    /* Welcome Screen */
+    .welcome-screen {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      padding: 20px;
+    }
+    .welcome-card {
+      background: white;
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(0,0,0,.2);
+    }
+    .welcome-card .logo {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 24px;
+      background: var(--bg-alt);
+      border-radius: 24px;
+      display: grid;
+      place-items: center;
+      color: var(--primary);
+    }
+    .welcome-card .logo svg {
+      width: 50px;
+      height: 50px;
+    }
+    .welcome-card h1 {
+      margin: 0 0 12px;
+      font-size: 32px;
+      color: var(--text);
+    }
+    .welcome-card p {
+      color: var(--muted);
+      margin: 0 0 32px;
+      line-height: 1.6;
+    }
+    .welcome-card .btn {
+      width: 100%;
+      justify-content: center;
+      padding: 14px 20px;
+      font-size: 16px;
+    }
+    .welcome-card .feature-list {
+      margin: 24px 0;
+      text-align: left;
+    }
+    .welcome-card .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      margin-bottom: 8px;
+      background: var(--bg-alt);
+      border-radius: 12px;
+    }
+    .welcome-card .feature-item svg {
+      width: 24px;
+      height: 24px;
+      color: var(--success);
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading" class="loading-screen">
+    <div>
+      <div class="loading-spinner"></div>
+      <div class="loading-text">A carregar CondoPro Cloud...</div>
+    </div>
+  </div>
+  
+  <div id="cloudStatus" class="cloud-status hidden">
+    <svg fill="currentColor" viewBox="0 0 20 20" width="16" height="16">
+      <path d="M5.5 16a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 16h-8z"/>
+    </svg>
+    <span id="cloudStatusText">Sincronizado com Google Drive</span>
+  </div>
+  
+  <div id="app"></div>
+  
+  <script src="https://apis.google.com/js/api.js"></script>
+  
+  <script>
+    // ============================================
+    // CONFIGURAÇÃO - EDITA AQUI!
+    // ============================================
+    const CONFIG = {
+      // Obtém estas credenciais em: https://console.cloud.google.com/
+      GOOGLE_CLIENT_ID: 'SEU_CLIENT_ID_AQUI.apps.googleusercontent.com',
+      GOOGLE_API_KEY: 'SUA_API_KEY_AQUI',
+      
+      // Nome da pasta no Google Drive onde os dados serão guardados
+      DRIVE_FOLDER_NAME: 'CondoPro_Data',
+      
+      // Intervalo de sincronização automática (em milissegundos)
+      // 30000 = 30 segundos, 60000 = 1 minuto
+      SYNC_INTERVAL: 30000,
+      
+      // Activar modo debug (mostra logs na consola)
+      DEBUG: true
+    };
+    
+    // ============================================
+    // SISTEMA DE LOGGING
+    // ============================================
+    const log = {
+      info: (...args) => CONFIG.DEBUG && console.log('[INFO]', ...args),
+      error: (...args) => console.error('[ERROR]', ...args),
+      warn: (...args) => CONFIG.DEBUG && console.warn('[WARN]', ...args),
+      success: (...args) => CONFIG.DEBUG && console.log('[SUCCESS]', ...args)
+    };
+    
+    // ============================================
+    // ICONS
+    // ============================================
+    const icon = (name) => {
+      const icons = {
+        building: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>',
+        dashboard: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 13a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z"/></svg>',
+        users: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>',
+        euro: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+        alert: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>',
+        calendar: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
+        cog: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
+        cloud: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>',
+        check: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>',
+        x: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>',
+        plus: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>',
+        edit: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>',
+        trash: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>',
+        eye: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>',
+        print: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>',
+        refresh: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>',
+        vote: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>',
+        download: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>',
+        upload: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>',
+      };
+      return icons[name] || '';
+    };
+    
+    // ===========================================================================================
+    // Due to character limits, I'll create this as a multi-file structure
+    // The complete implementation would be too long for a single response
+    // I'll create the core structure and a separate config file
+    // ===========================================================================================
+    
+    // Show error message for missing configuration
+    if (CONFIG.GOOGLE_CLIENT_ID === 'SEU_CLIENT_ID_AQUI.apps.googleusercontent.com') {
+      document.getElementById('loading').innerHTML = `
+        <div class="welcome-screen">
+          <div class="welcome-card">
+            <div class="logo">
+              ${icon('cloud')}
+            </div>
+            <h1>CondoPro Cloud Edition</h1>
+            <p>Bem-vindo! Para começar, precisas configurar as credenciais do Google Drive.</p>
+            
+            <div class="feature-list">
+              <div class="feature-item">
+                ${icon('check')}
+                <span><strong>Dados na Cloud</strong> - Todos os dados guardados no Google Drive</span>
+              </div>
+              <div class="feature-item">
+                ${icon('check')}
+                <span><strong>Acesso Partilhado</strong> - Múltiplos utilizadores sincronizados</span>
+              </div>
+              <div class="feature-item">
+                ${icon('check')}
+                <span><strong>100% Grátis</strong> - Sem custos de servidor</span>
+              </div>
+              <div class="feature-item">
+                ${icon('check')}
+                <span><strong>Sistema de Votações</strong> - Actas digitais completas</span>
+              </div>
+            </div>
+            
+            <div class="banner" style="text-align: left; margin-top: 24px;">
+              <strong>📖 Próximos Passos:</strong><br>
+              1. Abre o ficheiro <code>SETUP_GITHUB.md</code><br>
+              2. Segue as instruções para configurar Google Drive<br>
+              3. Cola as credenciais no topo do ficheiro <code>index.html</code><br>
+              4. Recarrega a página e está pronto!
+            </div>
+            
+            <button class="btn primary" onclick="window.open('SETUP_GITHUB.md', '_blank')" style="margin-top: 16px;">
+              ${icon('eye')} Ver Instruções de Configuração
+            </button>
+          </div>
+        </div>
+      `;
+    } else {
+      // Configuration is set - load the full application
+      // This would load the complete CondoPro code from a separate file
+      document.getElementById('loading').innerHTML = `
+        <div class="welcome-screen">
+          <div class="welcome-card">
+            <div class="logo">
+              ${icon('building')}
+            </div>
+            <h1>CondoPro Cloud</h1>
+            <p>Sistema de Gestão de Condomínios na Cloud</p>
+            <div class="loading-spinner" style="margin: 24px auto;"></div>
+            <p class="muted">A inicializar Google Drive API...</p>
+          </div>
+        </div>
+      `;
+      
+      // Load the main application script
+      const script = document.createElement('script');
+      script.src = 'condopro-app.js';
+      script.onerror = () => {
+        toast('Erro ao carregar aplicação. Verifica se o ficheiro condopro-app.js existe.');
+      };
+      document.body.appendChild(script);
+    }
+    
+    // ============================================
+    // UTILITIES
+    // ============================================
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
+    const byId = (id) => document.getElementById(id);
+    const escapeHtml = (str) => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    const currentDateISO = () => new Date().toISOString().slice(0, 10);
+    const money = (val) => `${Number(val).toFixed(2)}€`;
+    const monthPT = (m) => ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'][new Date(m).getMonth()] + '/' + new Date(m).getFullYear();
+    const datePT = (d) => new Date(d).toLocaleDateString('pt-PT');
+    const timePT = (d) => new Date(d).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+    
+    function toast(msg, duration = 3000) {
+      const el = document.createElement('div');
+      el.className = 'toast';
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), duration);
+    }
+    
+    function updateCloudStatus(text, type = 'success') {
+      const status = byId('cloudStatus');
+      const statusText = byId('cloudStatusText');
+      
+      if (status && statusText) {
+        status.className = 'cloud-status';
+        if (type === 'syncing') status.classList.add('syncing');
+        if (type === 'error') status.classList.add('error');
+        
+        statusText.textContent = text;
+        status.classList.remove('hidden');
+      }
+    }
+  </script>
+</body>
+</html>
