@@ -589,6 +589,12 @@
         refresh: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>',
         vote: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>',
         document: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
+        bell: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>',
+        chart: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>',
+        briefcase: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>',
+        cash: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>',
+        clipboard: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>',
+        trending: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>',
       };
       return icons[name] || '';
     };
@@ -952,8 +958,15 @@
       return {
         users: data.users || [],
         payments: data.payments || [],
+        expenses: data.expenses || [],  // NOVO
         issues: data.issues || [],
         meetings: data.meetings || [],
+        works: data.works || [],  // NOVO: Obras
+        budget: data.budget || {  // NOVO: Orçamento
+          year: new Date().getFullYear(),
+          categories: {}
+        },
+        notifications: data.notifications || [],  // NOVO
         settings: {
           condoName: data.settings?.condoName || 'Meu Condomínio',
           address: data.settings?.address || '',
@@ -1032,7 +1045,8 @@
             active: true,
             phone: '',
             nif: '',
-            quota: 0
+            quota: 0,
+            permilagem: 0 // Admin não tem permilagem de voto
           });
           await saveState(this.state, 'Criação de utilizador admin inicial');
         }
@@ -1151,6 +1165,12 @@
                 <span class="icon-wrap">${icon('euro')}</span>
                 Pagamentos
               </button>
+              ${this.currentUser.role === 'admin' ? `
+                <button class="${this.currentView === 'expenses' ? 'active' : ''}" onclick="app.navigate('expenses')">
+                  <span class="icon-wrap">${icon('cash')}</span>
+                  Despesas
+                </button>
+              ` : ''}
               <button class="${this.currentView === 'issues' ? 'active' : ''}" onclick="app.navigate('issues')">
                 <span class="icon-wrap">${icon('alert')}</span>
                 Ocorrências
@@ -1158,6 +1178,24 @@
               <button class="${this.currentView === 'meetings' ? 'active' : ''}" onclick="app.navigate('meetings')">
                 <span class="icon-wrap">${icon('calendar')}</span>
                 Actas
+              </button>
+              ${this.currentUser.role === 'admin' ? `
+                <button class="${this.currentView === 'works' ? 'active' : ''}" onclick="app.navigate('works')">
+                  <span class="icon-wrap">${icon('briefcase')}</span>
+                  Obras
+                </button>
+                <button class="${this.currentView === 'budget' ? 'active' : ''}" onclick="app.navigate('budget')">
+                  <span class="icon-wrap">${icon('chart')}</span>
+                  Orçamento
+                </button>
+                <button class="${this.currentView === 'analytics' ? 'active' : ''}" onclick="app.navigate('analytics')">
+                  <span class="icon-wrap">${icon('trending')}</span>
+                  Analytics
+                </button>
+              ` : ''}
+              <button class="${this.currentView === 'calendar' ? 'active' : ''}" onclick="app.navigate('calendar')">
+                <span class="icon-wrap">${icon('calendar')}</span>
+                Calendário
               </button>
               <button class="${this.currentView === 'settings' ? 'active' : ''}" onclick="app.navigate('settings')">
                 <span class="icon-wrap">${icon('cog')}</span>
@@ -1188,10 +1226,17 @@
           dashboard: 'Dashboard',
           users: 'Condóminos',
           payments: 'Pagamentos',
+          expenses: 'Despesas',
           issues: 'Ocorrências',
           meetings: 'Actas e Votações',
+          works: 'Gestão de Obras',
+          budget: 'Orçamento Anual',
+          analytics: 'Analytics e Insights',
+          calendar: 'Calendário',
           settings: 'Definições'
         };
+        
+        const unreadNotifications = this.state.notifications.filter(n => !n.read && (n.userId === this.currentUser.id || n.userId === 'all')).length;
         
         return `
           <div class="topbar">
@@ -1200,6 +1245,18 @@
               <p>Gestão de Condomínios</p>
             </div>
             <div class="toolbar">
+              ${unreadNotifications > 0 ? `
+                <button class="btn sm" onclick="app.showNotifications()" style="position: relative;">
+                  ${icon('bell')}
+                  <span style="position: absolute; top: -4px; right: -4px; background: var(--danger); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                    ${unreadNotifications}
+                  </span>
+                </button>
+              ` : `
+                <button class="btn sm" onclick="app.showNotifications()">
+                  ${icon('bell')}
+                </button>
+              `}
               ${GDrive.isSignedIn && GDrive.lastSyncTime ? `
                 <div class="pill success">
                   ${icon('check')} Sincronizado ${timePT(GDrive.lastSyncTime)}
@@ -1215,8 +1272,13 @@
           case 'dashboard': return this.renderDashboard();
           case 'users': return this.renderUsers();
           case 'payments': return this.renderPayments();
+          case 'expenses': return this.renderExpenses();
           case 'issues': return this.renderIssues();
           case 'meetings': return this.renderMeetings();
+          case 'works': return this.renderWorks();
+          case 'budget': return this.renderBudget();
+          case 'analytics': return this.renderAnalytics();
+          case 'calendar': return this.renderCalendar();
           case 'settings': return this.renderSettings();
           default: return '<p>Página não encontrada</p>';
         }
@@ -1490,6 +1552,7 @@
                       <th>Fração</th>
                       <th>Email</th>
                       <th>Telefone</th>
+                      <th>Permilagem</th>
                       <th>Quota Mensal</th>
                       <th>Estado</th>
                       <th>Ações</th>
@@ -1503,6 +1566,7 @@
                         <td>${escapeHtml(u.unit)}</td>
                         <td>${escapeHtml(u.email)}</td>
                         <td>${escapeHtml(u.phone || '-')}</td>
+                        <td><strong>${(u.permilagem || 0).toFixed(2)}%</strong></td>
                         <td>${money(u.quota || 0)}</td>
                         <td><span class="pill ${u.active ? 'success' : 'danger'}">${u.active ? 'Ativo' : 'Inativo'}</span></td>
                         <td>
@@ -1514,6 +1578,22 @@
                       </tr>
                     `).join('')}
                   </tbody>
+                  <tfoot>
+                    <tr style="background: var(--bg-alt); font-weight: 700;">
+                      <td colspan="5" style="text-align: right; padding-right: 20px;">TOTAL PERMILAGEM:</td>
+                      <td>
+                        ${(() => {
+                          const total = users.filter(u => u.role === 'user' && u.active)
+                            .reduce((sum, u) => sum + (parseFloat(u.permilagem) || 0), 0);
+                          const isValid = Math.abs(total - 100) < 0.01;
+                          return `<span style="color: ${isValid ? 'var(--success)' : 'var(--danger)'};">
+                            ${total.toFixed(2)}% ${isValid ? '✅' : '⚠️'}
+                          </span>`;
+                        })()}
+                      </td>
+                      <td colspan="3"></td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
             `}
@@ -1895,6 +1975,885 @@
         `;
       },
       
+      renderExpenses() {
+        const expenses = this.state.expenses;
+        const categories = {
+          limpeza: { name: 'Limpeza', icon: '🧹', color: '#3b82f6' },
+          elevador: { name: 'Elevador', icon: '🛗', color: '#8b5cf6' },
+          seguros: { name: 'Seguros', icon: '🛡️', color: '#10b981' },
+          jardinagem: { name: 'Jardinagem', icon: '🌳', color: '#22c55e' },
+          utilities: { name: 'Água/Luz/Gás', icon: '💡', color: '#f59e0b' },
+          reparacoes: { name: 'Reparações', icon: '🔧', color: '#ef4444' },
+          obras: { name: 'Obras', icon: '🏗️', color: '#dc2626' },
+          contingencia: { name: 'Contingência', icon: '💰', color: '#64748b' },
+          outros: { name: 'Outros', icon: '📋', color: '#6b7280' }
+        };
+        
+        return `
+          <div class="card">
+            <div class="card-header">
+              <h3>Despesas Categorizadas</h3>
+              <button class="btn primary sm" onclick="openExpenseModal()">
+                ${icon('plus')} Nova Despesa
+              </button>
+            </div>
+            
+            ${expenses.length === 0 ? '<div class="empty"><p>Nenhuma despesa registada</p></div>' : `
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Categoria</th>
+                      <th>Descrição</th>
+                      <th>Fornecedor</th>
+                      <th>Valor</th>
+                      <th>Estado</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${expenses.map(e => {
+                      const cat = categories[e.category] || categories.outros;
+                      return `
+                        <tr>
+                          <td>${datePT(e.date)}</td>
+                          <td><span style="color: ${cat.color};">${cat.icon} ${cat.name}</span></td>
+                          <td>${escapeHtml(e.description)}</td>
+                          <td>${escapeHtml(e.supplier || '-')}</td>
+                          <td><strong>${money(e.amount)}</strong></td>
+                          <td><span class="pill ${e.paid ? 'success' : 'warning'}">${e.paid ? 'Pago' : 'Pendente'}</span></td>
+                          <td>
+                            <div class="actions">
+                              <button class="btn sm" onclick="openExpenseModal('${e.id}')">${icon('edit')}</button>
+                              <button class="btn sm danger" onclick="deleteExpense('${e.id}')">${icon('trash')}</button>
+                            </div>
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `}
+          </div>
+        `;
+      },
+      
+      renderWorks() {
+        const works = this.state.works;
+        
+        return `
+          <div class="card">
+            <div class="card-header">
+              <h3>Gestão de Obras</h3>
+              <button class="btn primary sm" onclick="openWorkModal()">
+                ${icon('plus')} Nova Obra
+              </button>
+            </div>
+            
+            ${works.length === 0 ? '<div class="empty"><p>Nenhuma obra registada</p></div>' : `
+              <div style="display: grid; gap: 18px;">
+                ${works.map(w => {
+                  const statusColors = {
+                    draft: 'muted',
+                    in_progress: 'warning',
+                    completed: 'success'
+                  };
+                  const statusLabels = {
+                    draft: 'Rascunho',
+                    in_progress: 'Em Progresso',
+                    completed: 'Concluída'
+                  };
+                  
+                  return `
+                    <div class="card" style="margin: 0;">
+                      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                        <div>
+                          <h4>${escapeHtml(w.title)}</h4>
+                          <p class="muted" style="font-size: 13px; margin-top: 4px;">${escapeHtml(w.description)}</p>
+                        </div>
+                        <span class="pill ${statusColors[w.status]}">${statusLabels[w.status]}</span>
+                      </div>
+                      
+                      ${w.status !== 'draft' ? `
+                        <div style="margin: 12px 0;">
+                          <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+                            <span>Progresso</span>
+                            <span><strong>${w.progress || 0}%</strong></span>
+                          </div>
+                          <div style="background: var(--border); height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div style="background: var(--primary); width: ${w.progress || 0}%; height: 100%;"></div>
+                          </div>
+                        </div>
+                      ` : ''}
+                      
+                      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; font-size: 13px;">
+                        <div>
+                          <div class="muted">Orçamento</div>
+                          <strong>${money(w.totalBudget || 0)}</strong>
+                        </div>
+                        <div>
+                          <div class="muted">Gasto</div>
+                          <strong style="color: ${(w.totalSpent || 0) > (w.totalBudget || 0) ? 'var(--danger)' : 'var(--text)'};">${money(w.totalSpent || 0)}</strong>
+                        </div>
+                      </div>
+                      
+                      <div style="margin-top: 12px; display: flex; gap: 8px;">
+                        <button class="btn sm" onclick="viewWork('${w.id}')">
+                          ${icon('eye')} Ver Detalhes
+                        </button>
+                        <button class="btn sm" onclick="openWorkModal('${w.id}')">
+                          ${icon('edit')}
+                        </button>
+                        <button class="btn sm danger" onclick="deleteWork('${w.id}')">
+                          ${icon('trash')}
+                        </button>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `}
+          </div>
+        `;
+      },
+      
+      renderBudget() {
+        const budget = this.state.budget;
+        const expenses = this.state.expenses;
+        const currentYear = budget.year || new Date().getFullYear();
+        
+        const categories = {
+          limpeza: { name: 'Limpeza', icon: '🧹', planned: 0, spent: 0 },
+          elevador: { name: 'Elevador', icon: '🛗', planned: 0, spent: 0 },
+          seguros: { name: 'Seguros', icon: '🛡️', planned: 0, spent: 0 },
+          jardinagem: { name: 'Jardinagem', icon: '🌳', planned: 0, spent: 0 },
+          utilities: { name: 'Água/Luz/Gás', icon: '💡', planned: 0, spent: 0 },
+          reparacoes: { name: 'Reparações', icon: '🔧', planned: 0, spent: 0 },
+          obras: { name: 'Obras', icon: '🏗️', planned: 0, spent: 0 },
+          contingencia: { name: 'Contingência', icon: '💰', planned: 0, spent: 0 }
+        };
+        
+        // Calcular gastos por categoria
+        expenses.filter(e => new Date(e.date).getFullYear() === currentYear && e.paid).forEach(e => {
+          if (categories[e.category]) {
+            categories[e.category].spent += e.amount;
+          }
+        });
+        
+        // Carregar valores planeados do orçamento
+        Object.keys(budget.categories || {}).forEach(cat => {
+          if (categories[cat]) {
+            categories[cat].planned = budget.categories[cat].planned || 0;
+          }
+        });
+        
+        const totalPlanned = Object.values(categories).reduce((sum, c) => sum + c.planned, 0);
+        const totalSpent = Object.values(categories).reduce((sum, c) => sum + c.spent, 0);
+        
+        return `
+          <div class="card">
+            <div class="card-header">
+              <h3>Orçamento ${currentYear}</h3>
+              <button class="btn primary sm" onclick="openBudgetEditor()">
+                ${icon('edit')} Editar Orçamento
+              </button>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 24px;">
+              <div class="card stat-card" style="margin: 0;">
+                <div>
+                  <div class="muted">Orçamento Total</div>
+                  <div class="stat-value">${money(totalPlanned)}</div>
+                </div>
+                <div class="stat-icon">${icon('clipboard')}</div>
+              </div>
+              <div class="card stat-card" style="margin: 0;">
+                <div>
+                  <div class="muted">Total Gasto</div>
+                  <div class="stat-value" style="color: ${totalSpent > totalPlanned ? 'var(--danger)' : 'var(--success)'};">${money(totalSpent)}</div>
+                  <div style="margin-top: 4px; font-size: 13px; color: var(--muted);">${totalPlanned > 0 ? ((totalSpent / totalPlanned) * 100).toFixed(1) : 0}% do orçamento</div>
+                </div>
+                <div class="stat-icon ${totalSpent > totalPlanned ? 'danger' : 'success'}">${icon('cash')}</div>
+              </div>
+            </div>
+            
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Categoria</th>
+                    <th>Planeado</th>
+                    <th>Gasto</th>
+                    <th>Restante</th>
+                    <th>%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${Object.entries(categories).map(([key, cat]) => {
+                    const remaining = cat.planned - cat.spent;
+                    const percent = cat.planned > 0 ? (cat.spent / cat.planned * 100).toFixed(1) : 0;
+                    const isOver = cat.spent > cat.planned && cat.planned > 0;
+                    
+                    return `
+                      <tr>
+                        <td>${cat.icon} ${cat.name}</td>
+                        <td>${money(cat.planned)}</td>
+                        <td><strong style="color: ${isOver ? 'var(--danger)' : 'var(--text)'};">${money(cat.spent)}</strong></td>
+                        <td style="color: ${remaining < 0 ? 'var(--danger)' : 'var(--success)'};">${money(remaining)}</td>
+                        <td>
+                          <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="flex: 1; background: var(--border); height: 6px; border-radius: 3px; overflow: hidden;">
+                              <div style="background: ${isOver ? 'var(--danger)' : 'var(--primary)'}; width: ${Math.min(percent, 100)}%; height: 100%;"></div>
+                            </div>
+                            <span style="font-size: 12px; min-width: 45px;">${percent}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      },
+      
+      renderCalendar() {
+        // Estado do calendário
+        if (!this.calendarState) {
+          this.calendarState = {
+            month: new Date().getMonth(),
+            year: new Date().getFullYear()
+          };
+        }
+        
+        const { month, year } = this.calendarState;
+        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        
+        // Calcular dias do mês
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const today = new Date();
+        
+        // Coletar eventos
+        const events = [];
+        
+        // Pagamentos que vencem este mês
+        this.state.payments.forEach(p => {
+          const paymentDate = new Date(p.month);
+          if (paymentDate.getMonth() === month && paymentDate.getFullYear() === year) {
+            events.push({
+              day: paymentDate.getDate(),
+              type: 'payment',
+              icon: '💰',
+              color: p.status === 'Pago' ? '#10b981' : '#f59e0b',
+              title: `Pagamento ${this.state.users.find(u => u.id === p.userId)?.name || 'N/A'}`,
+              subtitle: money(p.amount)
+            });
+          }
+        });
+        
+        // Reuniões
+        this.state.meetings.forEach(m => {
+          const meetingDate = new Date(m.date);
+          if (meetingDate.getMonth() === month && meetingDate.getFullYear() === year) {
+            events.push({
+              day: meetingDate.getDate(),
+              type: 'meeting',
+              icon: '🗳️',
+              color: '#8b5cf6',
+              title: m.title,
+              subtitle: m.time
+            });
+          }
+        });
+        
+        // Obras em progresso
+        this.state.works.filter(w => w.status === 'in_progress').forEach(w => {
+          const startDate = new Date(w.startDate);
+          const endDate = w.endDate ? new Date(w.endDate) : null;
+          
+          if (startDate.getMonth() === month && startDate.getFullYear() === year) {
+            events.push({
+              day: startDate.getDate(),
+              type: 'work',
+              icon: '🏗️',
+              color: '#dc2626',
+              title: `Início: ${w.title}`,
+              subtitle: `${w.progress}%`
+            });
+          }
+          
+          if (endDate && endDate.getMonth() === month && endDate.getFullYear() === year) {
+            events.push({
+              day: endDate.getDate(),
+              type: 'work',
+              icon: '✅',
+              color: '#10b981',
+              title: `Fim: ${w.title}`,
+              subtitle: `Previsto`
+            });
+          }
+        });
+        
+        // Ocorrências urgentes
+        this.state.issues.filter(i => i.priority === 'Alta' && i.status === 'Pendente').forEach(i => {
+          const issueDate = new Date(i.createdAt);
+          if (issueDate.getMonth() === month && issueDate.getFullYear() === year) {
+            events.push({
+              day: issueDate.getDate(),
+              type: 'issue',
+              icon: '⚠️',
+              color: '#ef4444',
+              title: i.title,
+              subtitle: i.location
+            });
+          }
+        });
+        
+        // Construir grid do calendário
+        const weeks = [];
+        let currentWeek = [];
+        
+        // Dias vazios no início
+        for (let i = 0; i < firstDay; i++) {
+          currentWeek.push(null);
+        }
+        
+        // Dias do mês
+        for (let day = 1; day <= daysInMonth; day++) {
+          currentWeek.push(day);
+          if (currentWeek.length === 7) {
+            weeks.push(currentWeek);
+            currentWeek = [];
+          }
+        }
+        
+        // Completar última semana
+        if (currentWeek.length > 0) {
+          while (currentWeek.length < 7) {
+            currentWeek.push(null);
+          }
+          weeks.push(currentWeek);
+        }
+        
+        return `
+          <div class="card">
+            <div class="card-header">
+              <h3>Calendário - ${monthNames[month]} ${year}</h3>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn sm" onclick="app.calendarPrevMonth()">
+                  ${icon('x')} Anterior
+                </button>
+                <button class="btn sm" onclick="app.calendarToday()">
+                  Hoje
+                </button>
+                <button class="btn sm" onclick="app.calendarNextMonth()">
+                  Próximo ${icon('x')}
+                </button>
+              </div>
+            </div>
+            
+            <div style="padding: 20px;">
+              <!-- Legenda -->
+              <div style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; font-size: 13px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span>💰</span> Pagamentos
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span>🗳️</span> Reuniões
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span>🏗️</span> Obras
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span>⚠️</span> Ocorrências
+                </div>
+              </div>
+              
+              <!-- Grid do Calendário -->
+              <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; background: var(--border); border-radius: 8px; overflow: hidden;">
+                <!-- Cabeçalho dias da semana -->
+                ${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => `
+                  <div style="background: var(--bg-alt); padding: 12px; text-align: center; font-weight: 600; font-size: 13px;">
+                    ${day}
+                  </div>
+                `).join('')}
+                
+                <!-- Dias do mês -->
+                ${weeks.map(week => week.map(day => {
+                  if (!day) {
+                    return '<div style="background: var(--bg); min-height: 100px;"></div>';
+                  }
+                  
+                  const dayEvents = events.filter(e => e.day === day);
+                  const isToday = today.getDate() === day && 
+                                  today.getMonth() === month && 
+                                  today.getFullYear() === year;
+                  
+                  return `
+                    <div style="
+                      background: var(--bg); 
+                      min-height: 100px; 
+                      padding: 8px;
+                      ${isToday ? 'border: 2px solid var(--primary);' : ''}
+                      cursor: ${dayEvents.length > 0 ? 'pointer' : 'default'};
+                    " onclick="${dayEvents.length > 0 ? `app.showDayEvents(${day}, ${month}, ${year})` : ''}">
+                      <div style="font-weight: ${isToday ? '700' : '600'}; font-size: 14px; margin-bottom: 6px; color: ${isToday ? 'var(--primary)' : 'var(--text)'};">
+                        ${day}
+                      </div>
+                      ${dayEvents.slice(0, 3).map(e => `
+                        <div style="
+                          font-size: 11px; 
+                          padding: 3px 6px; 
+                          margin-bottom: 3px; 
+                          background: ${e.color}22;
+                          border-left: 3px solid ${e.color};
+                          border-radius: 3px;
+                          white-space: nowrap;
+                          overflow: hidden;
+                          text-overflow: ellipsis;
+                        ">
+                          ${e.icon} ${e.title}
+                        </div>
+                      `).join('')}
+                      ${dayEvents.length > 3 ? `
+                        <div style="font-size: 10px; color: var(--muted); margin-top: 4px;">
+                          +${dayEvents.length - 3} mais
+                        </div>
+                      ` : ''}
+                    </div>
+                  `;
+                }).join('')).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      },
+      
+      calendarPrevMonth() {
+        this.calendarState.month--;
+        if (this.calendarState.month < 0) {
+          this.calendarState.month = 11;
+          this.calendarState.year--;
+        }
+        this.render();
+      },
+      
+      calendarNextMonth() {
+        this.calendarState.month++;
+        if (this.calendarState.month > 11) {
+          this.calendarState.month = 0;
+          this.calendarState.year++;
+        }
+        this.render();
+      },
+      
+      calendarToday() {
+        const today = new Date();
+        this.calendarState = {
+          month: today.getMonth(),
+          year: today.getFullYear()
+        };
+        this.render();
+      },
+      
+      renderAnalytics() {
+        const currentYear = new Date().getFullYear();
+        const lastYear = currentYear - 1;
+        
+        // Dados do ano atual
+        const currentYearPayments = this.state.payments.filter(p => new Date(p.month).getFullYear() === currentYear);
+        const lastYearPayments = this.state.payments.filter(p => new Date(p.month).getFullYear() === lastYear);
+        
+        const currentRevenue = currentYearPayments.filter(p => p.status === 'Pago').reduce((sum, p) => sum + p.amount, 0);
+        const lastRevenue = lastYearPayments.filter(p => p.status === 'Pago').reduce((sum, p) => sum + p.amount, 0);
+        const revenueChange = lastRevenue > 0 ? ((currentRevenue - lastRevenue) / lastRevenue * 100).toFixed(1) : 0;
+        
+        const currentExpenses = this.state.expenses.filter(e => new Date(e.date).getFullYear() === currentYear && e.paid)
+          .reduce((sum, e) => sum + e.amount, 0);
+        const lastExpenses = this.state.expenses.filter(e => new Date(e.date).getFullYear() === lastYear && e.paid)
+          .reduce((sum, e) => sum + e.amount, 0);
+        const expensesChange = lastExpenses > 0 ? ((currentExpenses - lastExpenses) / lastExpenses * 100).toFixed(1) : 0;
+        
+        // Taxa de pagamento
+        const totalExpected = currentYearPayments.reduce((sum, p) => sum + p.amount, 0);
+        const paymentRate = totalExpected > 0 ? (currentRevenue / totalExpected * 100).toFixed(1) : 0;
+        
+        // Tempo médio resolução ocorrências
+        const resolvedIssues = this.state.issues.filter(i => i.status === 'Resolvido');
+        const avgResolutionTime = resolvedIssues.length > 0 
+          ? (resolvedIssues.reduce((sum, i) => {
+              const created = new Date(i.createdAt);
+              const resolved = new Date(i.resolvedAt || i.createdAt);
+              return sum + (resolved - created) / (1000 * 60 * 60 * 24);
+            }, 0) / resolvedIssues.length).toFixed(1)
+          : 0;
+        
+        // Participação em votações
+        const votingMeetings = this.state.meetings.filter(m => m.status === 'closed');
+        const totalVotingOps = votingMeetings.reduce((sum, m) => sum + (m.agendaItems?.length || 0), 0);
+        const totalVotes = votingMeetings.reduce((sum, m) => {
+          return sum + (m.agendaItems || []).reduce((vsum, item) => {
+            return vsum + Object.keys(item.votes || {}).length;
+          }, 0);
+        }, 0);
+        const avgParticipation = totalVotingOps > 0 
+          ? (totalVotes / totalVotingOps / this.state.users.filter(u => u.active).length * 100).toFixed(1)
+          : 0;
+        
+        return `
+          <div style="display: grid; gap: 18px;">
+            <!-- KPIs Principais -->
+            <div class="card">
+              <h3 style="margin-bottom: 18px;">Indicadores Principais (${currentYear})</h3>
+              
+              <div class="grid stats">
+                <div class="card stat-card" style="margin: 0;">
+                  <div>
+                    <div class="muted">Taxa de Pagamento</div>
+                    <div class="stat-value">${paymentRate}%</div>
+                    <div style="margin-top: 4px; font-size: 13px; color: ${paymentRate >= 90 ? 'var(--success)' : paymentRate >= 75 ? 'var(--warning)' : 'var(--danger)'};">
+                      ${paymentRate >= 90 ? 'Excelente ✅' : paymentRate >= 75 ? 'Bom ⚠️' : 'Atenção ❌'}
+                    </div>
+                  </div>
+                  <div class="stat-icon ${paymentRate >= 90 ? 'success' : paymentRate >= 75 ? 'warning' : 'danger'}">
+                    ${icon('euro')}
+                  </div>
+                </div>
+                
+                <div class="card stat-card" style="margin: 0;">
+                  <div>
+                    <div class="muted">Tempo Resolução Médio</div>
+                    <div class="stat-value">${avgResolutionTime}d</div>
+                    <div style="margin-top: 4px; font-size: 13px; color: ${avgResolutionTime <= 5 ? 'var(--success)' : 'var(--warning)'};">
+                      ${avgResolutionTime <= 5 ? 'Rápido ✅' : 'Pode melhorar ⚠️'}
+                    </div>
+                  </div>
+                  <div class="stat-icon ${avgResolutionTime <= 5 ? 'success' : 'warning'}">
+                    ${icon('alert')}
+                  </div>
+                </div>
+                
+                <div class="card stat-card" style="margin: 0;">
+                  <div>
+                    <div class="muted">Participação Votações</div>
+                    <div class="stat-value">${avgParticipation}%</div>
+                    <div style="margin-top: 4px; font-size: 13px; color: ${avgParticipation >= 70 ? 'var(--success)' : 'var(--warning)'};">
+                      ${avgParticipation >= 70 ? 'Boa ✅' : 'Pode melhorar ⚠️'}
+                    </div>
+                  </div>
+                  <div class="stat-icon ${avgParticipation >= 70 ? 'success' : 'warning'}">
+                    ${icon('vote')}
+                  </div>
+                </div>
+                
+                <div class="card stat-card" style="margin: 0;">
+                  <div>
+                    <div class="muted">Obras em Progresso</div>
+                    <div class="stat-value">${this.state.works.filter(w => w.status === 'in_progress').length}</div>
+                    <div style="margin-top: 4px; font-size: 13px; color: var(--muted);">
+                      ${this.state.works.filter(w => w.status === 'completed').length} concluídas
+                    </div>
+                  </div>
+                  <div class="stat-icon">${icon('briefcase')}</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Comparação Ano a Ano -->
+            <div class="card">
+              <h3 style="margin-bottom: 18px;">Comparação ${lastYear} vs ${currentYear}</h3>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <strong>Receitas</strong>
+                    <span style="color: ${revenueChange >= 0 ? 'var(--success)' : 'var(--danger)'}; font-weight: 600;">
+                      ${revenueChange >= 0 ? '↑' : '↓'} ${Math.abs(revenueChange)}%
+                    </span>
+                  </div>
+                  <div style="font-size: 13px; color: var(--muted); margin-bottom: 6px;">
+                    ${lastYear}: ${money(lastRevenue)}
+                  </div>
+                  <div style="font-size: 13px; color: var(--text); font-weight: 600;">
+                    ${currentYear}: ${money(currentRevenue)}
+                  </div>
+                </div>
+                
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <strong>Despesas</strong>
+                    <span style="color: ${expensesChange >= 0 ? 'var(--danger)' : 'var(--success)'}; font-weight: 600;">
+                      ${expensesChange >= 0 ? '↑' : '↓'} ${Math.abs(expensesChange)}%
+                    </span>
+                  </div>
+                  <div style="font-size: 13px; color: var(--muted); margin-bottom: 6px;">
+                    ${lastYear}: ${money(lastExpenses)}
+                  </div>
+                  <div style="font-size: 13px; color: var(--text); font-weight: 600;">
+                    ${currentYear}: ${money(currentExpenses)}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Insights Automáticos -->
+            <div class="card">
+              <h3 style="margin-bottom: 18px;">💡 Insights e Recomendações</h3>
+              
+              <div style="display: grid; gap: 12px;">
+                ${paymentRate < 90 ? `
+                  <div style="padding: 12px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 6px;">
+                    <strong style="color: #92400e;">⚠️ Taxa de Pagamento Baixa</strong>
+                    <p style="font-size: 13px; color: #78350f; margin-top: 4px;">
+                      Apenas ${paymentRate}% das quotas foram pagas. Considera enviar lembretes aos devedores.
+                    </p>
+                  </div>
+                ` : ''}
+                
+                ${avgResolutionTime > 7 ? `
+                  <div style="padding: 12px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 6px;">
+                    <strong style="color: #92400e;">⚠️ Resolução Lenta</strong>
+                    <p style="font-size: 13px; color: #78350f; margin-top: 4px;">
+                      Ocorrências estão a demorar ${avgResolutionTime} dias em média. Considera priorizar as pendentes.
+                    </p>
+                  </div>
+                ` : ''}
+                
+                ${this.state.works.filter(w => w.totalSpent > w.totalBudget).length > 0 ? `
+                  <div style="padding: 12px; background: #fee2e2; border-left: 4px solid #ef4444; border-radius: 6px;">
+                    <strong style="color: #991b1b;">❌ Obras Acima do Orçamento</strong>
+                    <p style="font-size: 13px; color: #7f1d1d; margin-top: 4px;">
+                      ${this.state.works.filter(w => w.totalSpent > w.totalBudget).length} obra(s) excederam o orçamento. Revê os gastos.
+                    </p>
+                  </div>
+                ` : ''}
+                
+                ${paymentRate >= 95 && avgResolutionTime <= 5 ? `
+                  <div style="padding: 12px; background: #d1fae5; border-left: 4px solid #10b981; border-radius: 6px;">
+                    <strong style="color: #065f46;">✅ Gestão Excelente!</strong>
+                    <p style="font-size: 13px; color: #064e3b; margin-top: 4px;">
+                      O condomínio está muito bem gerido! Alta taxa de pagamento e resolução rápida de problemas.
+                    </p>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+            
+            <!-- Feed de Atividades Recentes -->
+            <div class="card">
+              <h3 style="margin-bottom: 18px;">📌 Atividades Recentes</h3>
+              ${this.renderActivityFeed()}
+            </div>
+          </div>
+        `;
+      },
+      
+      renderActivityFeed() {
+        const activities = [];
+        
+        // Pagamentos recentes
+        this.state.payments
+          .filter(p => p.paidAt)
+          .sort((a, b) => new Date(b.paidAt) - new Date(a.paidAt))
+          .slice(0, 5)
+          .forEach(p => {
+            const user = this.state.users.find(u => u.id === p.userId);
+            activities.push({
+              icon: '💰',
+              color: '#10b981',
+              title: `${user?.name || 'N/A'} pagou quota`,
+              subtitle: `${monthPT(p.month)} - ${money(p.amount)}`,
+              time: p.paidAt
+            });
+          });
+        
+        // Reuniões recentes
+        this.state.meetings
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
+          .slice(0, 3)
+          .forEach(m => {
+            const statusLabel = m.status === 'closed' ? 'Fechada' : m.status === 'voting' ? 'Em Votação' : 'Rascunho';
+            activities.push({
+              icon: '🗳️',
+              color: '#8b5cf6',
+              title: `Reunião: ${m.title}`,
+              subtitle: statusLabel,
+              time: m.date
+            });
+          });
+        
+        // Ocorrências recentes
+        this.state.issues
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 3)
+          .forEach(i => {
+            activities.push({
+              icon: i.priority === 'Alta' ? '⚠️' : 'ℹ️',
+              color: i.priority === 'Alta' ? '#ef4444' : '#6b7280',
+              title: `Nova ocorrência: ${i.title}`,
+              subtitle: i.location,
+              time: i.createdAt
+            });
+          });
+        
+        // Ordenar por tempo
+        activities.sort((a, b) => new Date(b.time) - new Date(a.time));
+        
+        return `
+          <div style="max-height: 400px; overflow-y: auto;">
+            ${activities.slice(0, 15).map(a => `
+              <div style="
+                display: flex;
+                gap: 12px;
+                padding: 12px;
+                border-bottom: 1px solid var(--border);
+              ">
+                <div style="
+                  font-size: 24px;
+                  width: 40px;
+                  height: 40px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: ${a.color}22;
+                  border-radius: 8px;
+                  flex-shrink: 0;
+                ">
+                  ${a.icon}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <strong style="font-size: 14px;">${escapeHtml(a.title)}</strong>
+                  <p style="font-size: 13px; color: var(--muted); margin-top: 2px;">
+                    ${escapeHtml(a.subtitle)}
+                  </p>
+                  <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">
+                    ${datePT(a.time)} ${timePT(a.time)}
+                  </p>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      },
+      
+      showDayEvents(day, month, year) {
+        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        
+        // Coletar todos os eventos deste dia (mesmo código de cima)
+        const events = [];
+        
+        this.state.payments.forEach(p => {
+          const d = new Date(p.month);
+          if (d.getDate() === day && d.getMonth() === month && d.getFullYear() === year) {
+            events.push({
+              type: 'payment',
+              icon: '💰',
+              title: `Pagamento ${this.state.users.find(u => u.id === p.userId)?.name || 'N/A'}`,
+              subtitle: money(p.amount),
+              status: p.status
+            });
+          }
+        });
+        
+        this.state.meetings.forEach(m => {
+          const d = new Date(m.date);
+          if (d.getDate() === day && d.getMonth() === month && d.getFullYear() === year) {
+            events.push({
+              type: 'meeting',
+              icon: '🗳️',
+              title: m.title,
+              subtitle: m.time,
+              status: m.status
+            });
+          }
+        });
+        
+        this.state.works.filter(w => w.status === 'in_progress').forEach(w => {
+          const start = new Date(w.startDate);
+          if (start.getDate() === day && start.getMonth() === month && start.getFullYear() === year) {
+            events.push({
+              type: 'work',
+              icon: '🏗️',
+              title: `Início: ${w.title}`,
+              subtitle: `Progresso: ${w.progress}%`
+            });
+          }
+        });
+        
+        openModal(
+          `${day} de ${monthNames[month]} ${year}`,
+          `
+            ${events.length === 0 ? `
+              <div style="text-align: center; padding: 40px 20px; color: var(--muted);">
+                <p>Sem eventos neste dia</p>
+              </div>
+            ` : `
+              <div style="display: grid; gap: 12px;">
+                ${events.map(e => `
+                  <div style="padding: 12px; background: var(--bg-alt); border-radius: 8px;">
+                    <div style="font-size: 24px; margin-bottom: 6px;">${e.icon}</div>
+                    <strong>${escapeHtml(e.title)}</strong>
+                    <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+                      ${escapeHtml(e.subtitle)}
+                    </p>
+                    ${e.status ? `
+                      <span class="pill" style="margin-top: 8px; display: inline-block;">
+                        ${escapeHtml(e.status)}
+                      </span>
+                    ` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          `,
+          null,
+          null
+        );
+      },
+      
+      showNotifications() {
+        const notifications = this.state.notifications.filter(n => n.userId === this.currentUser.id || n.userId === 'all');
+        
+        openModal(
+          `Notificações (${notifications.filter(n => !n.read).length} não lidas)`,
+          `
+            ${notifications.length === 0 ? `
+              <div style="text-align: center; padding: 40px 20px; color: var(--muted);">
+                <div style="font-size: 48px; margin-bottom: 12px;">${icon('bell')}</div>
+                <p>Sem notificações</p>
+              </div>
+            ` : `
+              <div style="max-height: 400px; overflow-y: auto;">
+                ${notifications.map(n => `
+                  <div style="padding: 12px; border-bottom: 1px solid var(--border); ${n.read ? 'opacity: 0.6;' : 'background: var(--bg-alt);'}">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                      <div style="flex: 1;">
+                        <strong>${escapeHtml(n.title)}</strong>
+                        <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">${escapeHtml(n.message)}</p>
+                        <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">${datePT(n.createdAt)} ${timePT(n.createdAt)}</p>
+                      </div>
+                      ${!n.read ? `
+                        <button class="btn sm success" onclick="markNotificationRead('${n.id}')">
+                          ${icon('check')}
+                        </button>
+                      ` : ''}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          `,
+          null,
+          null
+        );
+      },
+      
       navigate(view) {
         this.currentView = view;
         this.render();
@@ -2074,6 +3033,29 @@
           
           <div class="subgrid">
             <div class="field">
+              <label>Permilagem (%)</label>
+              <input type="number" step="0.01" min="0" max="100" id="u_permilagem" value="${u.permilagem || 0}" placeholder="5.5" />
+              <p class="muted" style="font-size: 12px; margin-top: 4px;">
+                % de participação no condomínio (total deve somar 100%)
+              </p>
+            </div>
+            <div class="field">
+              <label style="color: var(--muted); font-size: 13px; margin-top: 20px;">
+                ${(() => {
+                  const totalPerm = app.state.users
+                    .filter(u => u.role === 'user' && u.active && u.id !== id)
+                    .reduce((sum, u) => sum + (parseFloat(u.permilagem) || 0), 0);
+                  const currentPerm = parseFloat(byId('u_permilagem')?.value || u.permilagem || 0);
+                  const total = totalPerm + currentPerm;
+                  const remaining = 100 - totalPerm;
+                  return `Total atual: ${totalPerm.toFixed(2)}% | Restante: ${remaining.toFixed(2)}%`;
+                })()}
+              </label>
+            </div>
+          </div>
+          
+          <div class="subgrid">
+            <div class="field">
               <label>Telefone</label>
               <input id="u_phone" value="${escapeHtml(u.phone || '')}" />
             </div>
@@ -2097,6 +3079,7 @@
             email: byId('u_email').value.trim(),
             unit: byId('u_unit').value.trim(),
             quota: parseFloat(byId('u_quota').value) || 0,
+            permilagem: parseFloat(byId('u_permilagem').value) || 0,
             phone: byId('u_phone').value.trim(),
             nif: byId('u_nif').value.trim(),
             active: byId('u_active').checked,
@@ -2294,6 +3277,371 @@
         </body></html>
       `);
       w.document.close();
+    }
+    
+    // ============================================
+    // EXPENSE MANAGEMENT
+    // ============================================
+    function openExpenseModal(id = null) {
+      const e = id ? app.state.expenses.find(x => x.id === id) : {
+        date: currentDateISO(),
+        category: 'outros',
+        description: '',
+        supplier: '',
+        amount: 0,
+        invoice: '',
+        paid: false
+      };
+      
+      const categories = {
+        limpeza: '🧹 Limpeza',
+        elevador: '🛗 Elevador',
+        seguros: '🛡️ Seguros',
+        jardinagem: '🌳 Jardinagem',
+        utilities: '💡 Água/Luz/Gás',
+        reparacoes: '🔧 Reparações',
+        obras: '🏗️ Obras',
+        contingencia: '💰 Contingência',
+        outros: '📋 Outros'
+      };
+      
+      openModal(
+        id ? 'Editar Despesa' : 'Nova Despesa',
+        `
+          <div class="field">
+            <label>Data</label>
+            <input type="date" id="e_date" value="${e.date}" />
+          </div>
+          
+          <div class="field">
+            <label>Categoria</label>
+            <select id="e_category">
+              ${Object.entries(categories).map(([key, name]) => `
+                <option value="${key}" ${e.category === key ? 'selected' : ''}>${name}</option>
+              `).join('')}
+            </select>
+          </div>
+          
+          <div class="field">
+            <label>Descrição</label>
+            <input id="e_description" value="${escapeHtml(e.description)}" placeholder="Ex: Limpeza mensal" />
+          </div>
+          
+          <div class="subgrid">
+            <div class="field">
+              <label>Fornecedor</label>
+              <input id="e_supplier" value="${escapeHtml(e.supplier || '')}" placeholder="Ex: LimpezasXPTO" />
+            </div>
+            <div class="field">
+              <label>Valor (€)</label>
+              <input type="number" step="0.01" id="e_amount" value="${e.amount}" />
+            </div>
+          </div>
+          
+          <div class="field">
+            <label>Nº Fatura/Recibo</label>
+            <input id="e_invoice" value="${escapeHtml(e.invoice || '')}" placeholder="Ex: FA-2026/123" />
+          </div>
+          
+          <div class="field">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="e_paid" ${e.paid ? 'checked' : ''} />
+              <span>Pago</span>
+            </label>
+          </div>
+        `,
+        'Guardar',
+        async () => {
+          const payload = {
+            date: byId('e_date').value,
+            category: byId('e_category').value,
+            description: byId('e_description').value.trim(),
+            supplier: byId('e_supplier').value.trim(),
+            amount: parseFloat(byId('e_amount').value) || 0,
+            invoice: byId('e_invoice').value.trim(),
+            paid: byId('e_paid').checked
+          };
+          
+          if (!payload.description || payload.amount <= 0) {
+            return toast('Preenche descrição e valor válido');
+          }
+          
+          if (id) {
+            Object.assign(app.state.expenses.find(x => x.id === id), payload);
+          } else {
+            app.state.expenses.push({
+              id: uid(),
+              paidAt: payload.paid ? currentDateISO() : null,
+              ...payload
+            });
+          }
+          
+          await saveState(app.state, id ? 'Editou despesa' : 'Criou despesa');
+          closeModal();
+          await app.refresh();
+          toast('Despesa guardada!');
+        }
+      );
+    }
+    
+    async function deleteExpense(id) {
+      if (!confirm('Apagar esta despesa?')) return;
+      app.state.expenses = app.state.expenses.filter(e => e.id !== id);
+      await saveState(app.state, 'Apagou despesa');
+      await app.refresh();
+      toast('Despesa apagada!');
+    }
+    
+    // ============================================
+    // WORKS MANAGEMENT
+    // ============================================
+    function openWorkModal(id = null) {
+      const w = id ? app.state.works.find(x => x.id === id) : {
+        title: '',
+        description: '',
+        status: 'draft',
+        startDate: currentDateISO(),
+        endDate: '',
+        progress: 0,
+        totalBudget: 0,
+        totalSpent: 0,
+        quotes: [],
+        payments: []
+      };
+      
+      openModal(
+        id ? 'Editar Obra' : 'Nova Obra',
+        `
+          <div class="field">
+            <label>Título</label>
+            <input id="w_title" value="${escapeHtml(w.title)}" placeholder="Ex: Reparação do Telhado" />
+          </div>
+          
+          <div class="field">
+            <label>Descrição</label>
+            <textarea id="w_description" rows="3" placeholder="Descrição detalhada da obra...">${escapeHtml(w.description)}</textarea>
+          </div>
+          
+          <div class="field">
+            <label>Estado</label>
+            <select id="w_status">
+              <option value="draft" ${w.status === 'draft' ? 'selected' : ''}>Rascunho</option>
+              <option value="in_progress" ${w.status === 'in_progress' ? 'selected' : ''}>Em Progresso</option>
+              <option value="completed" ${w.status === 'completed' ? 'selected' : ''}>Concluída</option>
+            </select>
+          </div>
+          
+          <div class="subgrid">
+            <div class="field">
+              <label>Data Início</label>
+              <input type="date" id="w_startDate" value="${w.startDate}" />
+            </div>
+            <div class="field">
+              <label>Data Fim Prevista</label>
+              <input type="date" id="w_endDate" value="${w.endDate || ''}" />
+            </div>
+          </div>
+          
+          <div class="subgrid">
+            <div class="field">
+              <label>Orçamento Total (€)</label>
+              <input type="number" step="0.01" id="w_budget" value="${w.totalBudget}" />
+            </div>
+            <div class="field">
+              <label>Progresso (%)</label>
+              <input type="number" min="0" max="100" id="w_progress" value="${w.progress}" />
+            </div>
+          </div>
+        `,
+        'Guardar',
+        async () => {
+          const payload = {
+            title: byId('w_title').value.trim(),
+            description: byId('w_description').value.trim(),
+            status: byId('w_status').value,
+            startDate: byId('w_startDate').value,
+            endDate: byId('w_endDate').value,
+            totalBudget: parseFloat(byId('w_budget').value) || 0,
+            progress: parseInt(byId('w_progress').value) || 0
+          };
+          
+          if (!payload.title) {
+            return toast('Preenche o título da obra');
+          }
+          
+          if (id) {
+            Object.assign(app.state.works.find(x => x.id === id), payload);
+          } else {
+            app.state.works.push({
+              id: uid(),
+              totalSpent: 0,
+              quotes: [],
+              payments: [],
+              photos: [],
+              ...payload
+            });
+          }
+          
+          await saveState(app.state, id ? 'Editou obra' : 'Criou obra');
+          closeModal();
+          await app.refresh();
+          toast('Obra guardada!');
+        }
+      );
+    }
+    
+    async function deleteWork(id) {
+      if (!confirm('Apagar esta obra?')) return;
+      app.state.works = app.state.works.filter(w => w.id !== id);
+      await saveState(app.state, 'Apagou obra');
+      await app.refresh();
+      toast('Obra apagada!');
+    }
+    
+    function viewWork(id) {
+      const work = app.state.works.find(w => w.id === id);
+      if (!work) return;
+      
+      const statusLabels = {
+        draft: 'Rascunho',
+        in_progress: 'Em Progresso',
+        completed: 'Concluída'
+      };
+      
+      openModal(
+        work.title,
+        `
+          <div class="field">
+            <label>Estado</label>
+            <span class="pill">${statusLabels[work.status]}</span>
+          </div>
+          
+          <div class="field">
+            <label>Descrição</label>
+            <p>${escapeHtml(work.description)}</p>
+          </div>
+          
+          <div class="subgrid">
+            <div class="field">
+              <label>Início</label>
+              <p>${datePT(work.startDate)}</p>
+            </div>
+            <div class="field">
+              <label>Fim Previsto</label>
+              <p>${work.endDate ? datePT(work.endDate) : 'Não definido'}</p>
+            </div>
+          </div>
+          
+          <div class="field">
+            <label>Progresso</label>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="flex: 1; background: var(--border); height: 12px; border-radius: 6px; overflow: hidden;">
+                <div style="background: var(--primary); width: ${work.progress}%; height: 100%;"></div>
+              </div>
+              <strong>${work.progress}%</strong>
+            </div>
+          </div>
+          
+          <div class="subgrid">
+            <div class="field">
+              <label>Orçamento</label>
+              <p><strong>${money(work.totalBudget)}</strong></p>
+            </div>
+            <div class="field">
+              <label>Gasto</label>
+              <p><strong style="color: ${work.totalSpent > work.totalBudget ? 'var(--danger)' : 'var(--success)'};">${money(work.totalSpent)}</strong></p>
+            </div>
+          </div>
+        `,
+        null,
+        null
+      );
+    }
+    
+    // ============================================
+    // BUDGET MANAGEMENT
+    // ============================================
+    function openBudgetEditor() {
+      const budget = app.state.budget;
+      const categories = {
+        limpeza: '🧹 Limpeza',
+        elevador: '🛗 Elevador',
+        seguros: '🛡️ Seguros',
+        jardinagem: '🌳 Jardinagem',
+        utilities: '💡 Água/Luz/Gás',
+        reparacoes: '🔧 Reparações',
+        obras: '🏗️ Obras',
+        contingencia: '💰 Contingência'
+      };
+      
+      openModal(
+        `Editar Orçamento ${budget.year || new Date().getFullYear()}`,
+        `
+          <div class="field">
+            <label>Ano</label>
+            <input type="number" id="budget_year" value="${budget.year || new Date().getFullYear()}" />
+          </div>
+          
+          <h4 style="margin: 18px 0 12px 0;">Categorias</h4>
+          
+          ${Object.entries(categories).map(([key, name]) => {
+            const current = budget.categories?.[key] || { planned: 0 };
+            return `
+              <div class="field">
+                <label>${name}</label>
+                <input type="number" step="0.01" id="budget_${key}" value="${current.planned}" placeholder="0.00" />
+              </div>
+            `;
+          }).join('')}
+        `,
+        'Guardar Orçamento',
+        async () => {
+          const year = parseInt(byId('budget_year').value);
+          const cats = {};
+          
+          Object.keys(categories).forEach(key => {
+            cats[key] = {
+              planned: parseFloat(byId(`budget_${key}`).value) || 0,
+              spent: budget.categories?.[key]?.spent || 0
+            };
+          });
+          
+          app.state.budget = {
+            year: year,
+            categories: cats
+          };
+          
+          await saveState(app.state, 'Atualizou orçamento');
+          closeModal();
+          await app.refresh();
+          toast('Orçamento atualizado!');
+        }
+      );
+    }
+    
+    // ============================================
+    // NOTIFICATIONS MANAGEMENT
+    // ============================================
+    async function markNotificationRead(id) {
+      const notification = app.state.notifications.find(n => n.id === id);
+      if (notification) {
+        notification.read = true;
+        await saveState(app.state, 'Marcou notificação como lida');
+        await app.refresh();
+        app.showNotifications(); // Reabrir modal atualizado
+      }
+    }
+    
+    function createNotification(userId, type, title, message) {
+      app.state.notifications.push({
+        id: uid(),
+        userId: userId, // 'all' ou userId específico
+        type: type, // payment_due, voting_open, issue_assigned, work_update
+        title: title,
+        message: message,
+        read: false,
+        createdAt: new Date().toISOString()
+      });
     }
     
     // ============================================
@@ -2697,30 +4045,42 @@ ${settings.email}`;
     
     function generateFinalMinutes(meeting) {
       const activeUsers = app.state.users.filter(u => u.active);
-      const totalVoters = activeUsers.length;
-      const quorum = Math.ceil(totalVoters / 2);
+      const totalPermilagem = activeUsers.reduce((sum, u) => sum + (parseFloat(u.permilagem) || 0), 0);
+      const quorumPermilagem = totalPermilagem / 2;
       
       let minutes = `ATA DA REUNIÃO\n`;
       minutes += `${meeting.title}\n`;
       minutes += `Data: ${datePT(meeting.date)} às ${meeting.time}\n`;
       minutes += `Local: ${meeting.place}\n\n`;
       
+      minutes += `Permilagem Total do Condomínio: ${totalPermilagem.toFixed(2)}%\n`;
+      minutes += `Quórum Necessário: ${quorumPermilagem.toFixed(2)}%\n\n`;
+      
       minutes += `ORDEM DE TRABALHOS E VOTAÇÕES\n\n`;
       
       meeting.agendaItems.forEach((item, index) => {
         const votes = item.votes || {};
-        const favor = Object.values(votes).filter(v => v === 'favor').length;
-        const against = Object.values(votes).filter(v => v === 'against').length;
-        const abstain = Object.values(votes).filter(v => v === 'abstain').length;
-        const totalVotes = favor + against + abstain;
+        
+        // Calcular permilagem por voto
+        let favorPerm = 0, againstPerm = 0, abstainPerm = 0;
+        Object.keys(votes).forEach(userId => {
+          const user = activeUsers.find(u => u.id === userId);
+          const userPerm = parseFloat(user?.permilagem) || 0;
+          if (votes[userId] === 'favor') favorPerm += userPerm;
+          else if (votes[userId] === 'against') againstPerm += userPerm;
+          else if (votes[userId] === 'abstain') abstainPerm += userPerm;
+        });
+        
+        const totalVotingPerm = favorPerm + againstPerm + abstainPerm;
         
         minutes += `${index + 1}. ${item.title}\n`;
-        minutes += `   Votos a favor: ${favor}\n`;
-        minutes += `   Votos contra: ${against}\n`;
-        minutes += `   Abstenções: ${abstain}\n`;
-        minutes += `   Total de votantes: ${totalVotes} / ${totalVoters}\n`;
-        minutes += `   Quórum atingido: ${totalVotes >= quorum ? 'Sim' : 'Não'}\n`;
-        minutes += `   Resultado: ${favor > against ? 'APROVADO' : (favor === against ? 'EMPATE' : 'REJEITADO')}\n\n`;
+        minutes += `   Votação por Permilagem:\n`;
+        minutes += `   - A Favor: ${favorPerm.toFixed(2)}%\n`;
+        minutes += `   - Contra: ${againstPerm.toFixed(2)}%\n`;
+        minutes += `   - Abstenções: ${abstainPerm.toFixed(2)}%\n`;
+        minutes += `   Permilagem Votante: ${totalVotingPerm.toFixed(2)}%\n`;
+        minutes += `   Quórum: ${totalVotingPerm >= quorumPermilagem ? 'ATINGIDO ✓' : 'NÃO ATINGIDO ✗'}\n`;
+        minutes += `   Resultado: ${favorPerm > againstPerm ? 'APROVADO' : (favorPerm === againstPerm ? 'EMPATE' : 'REJEITADO')}\n\n`;
       });
       
       minutes += `\nAta redigida automaticamente pelo sistema CondoPro.`;
