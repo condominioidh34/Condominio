@@ -1073,19 +1073,11 @@
         // Inicializar Google Drive API
         await GDrive.init();
         
-        // Verificar se está conectado ao Drive
-        if (!GDrive.isSignedIn) {
-          // Mostrar tela de conexão obrigatória
-          this.currentView = 'connect-drive';
-          this.render();
-          return;
-        }
-        
-        // Carregar dados do Google Drive (fonte primária)
+        // Tentar carregar dados (do Drive se conectado, senão local)
         this.state = await getState();
         this.snapshots = await getSnapshots();
         
-        // Se não há dados no Drive, criar estrutura inicial
+        // Se não há dados, criar estrutura inicial
         if (this.state.users.length === 0) {
           console.log('📦 Primeira utilização - Criando estrutura inicial...');
           this.state.users.push({
@@ -1102,9 +1094,8 @@
             permilagem: 0
           });
           
-          // Salvar no Google Drive
           await saveState(this.state, 'Criação inicial da base de dados');
-          console.log('✅ Estrutura inicial criada e guardada no Google Drive');
+          console.log('✅ Estrutura inicial criada');
         }
         
         this.render();
@@ -1125,9 +1116,7 @@
         const root = byId('app');
         if (!root) return;
         
-        if (this.currentView === 'connect-drive') {
-          root.innerHTML = this.renderConnectDrive();
-        } else if (!this.currentUser) {
+        if (!this.currentUser) {
           root.innerHTML = this.renderLogin();
         } else {
           root.innerHTML = this.renderApp();
@@ -1136,69 +1125,13 @@
         this.attachEventListeners();
       },
       
-      renderConnectDrive() {
-        return `
-          <div class="login-container">
-            <div class="login-card">
-              <div class="logo">
-                ${icon('building')}
-                <h1>CondoPro</h1>
-                <p>Gestão de Condomínios</p>
-              </div>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <div style="font-size: 64px; margin-bottom: 20px;">
-                  ${icon('cloud')}
-                </div>
-                <h2 style="margin-bottom: 12px;">Conexão Necessária</h2>
-                <p style="color: var(--muted); margin-bottom: 24px;">
-                  O CondoPro utiliza o Google Drive como base de dados principal.<br/>
-                  Conecta-te para aceder aos teus dados de qualquer dispositivo.
-                </p>
-                
-                <div style="background: var(--bg-alt); padding: 20px; border-radius: 12px; margin: 20px 0; text-align: left;">
-                  <h4 style="margin-bottom: 12px;">✨ Vantagens:</h4>
-                  <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
-                    <li>Dados sincronizados em todos os dispositivos</li>
-                    <li>Backups automáticos na cloud</li>
-                    <li>Acesso de qualquer lugar</li>
-                    <li>100% seguro e privado</li>
-                  </ul>
-                </div>
-                
-                <button class="btn primary" onclick="app.connectDrive()" style="width: 100%; padding: 14px; font-size: 16px;">
-                  ${icon('cloud')} Conectar ao Google Drive
-                </button>
-                
-                <p style="font-size: 12px; color: var(--muted); margin-top: 16px;">
-                  Os teus dados são guardados na tua conta Google Drive pessoal.<br/>
-                  Ninguém mais tem acesso.
-                </p>
-              </div>
-            </div>
-          </div>
-        `;
-      },
-      
-      async connectDrive() {
-        try {
-          await GDrive.signIn();
-          // Após conectar, reinicializar app
-          await this.init();
-          toast('✅ Conectado ao Google Drive!');
-        } catch (error) {
-          console.error('Erro ao conectar:', error);
-          toast('❌ Erro ao conectar ao Google Drive');
-        }
-      },
-      
       renderLogin() {
         return `
           <div style="min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);">
             <div class="card" style="width:100%;max-width:420px;margin:20px;">
               <div style="text-align:center;margin-bottom:24px;">
                 <div style="width:80px;height:80px;margin:0 auto 16px;background:var(--bg-alt);border-radius:20px;display:grid;place-items:center;color:var(--primary);">
-                  ${icon('building')}
+                  <svg style="width:40px;height:40px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                 </div>
                 <h2 style="margin:0 0 6px;">CondoPro</h2>
                 <p class="muted">Gestão de Condomínios</p>
@@ -1218,8 +1151,41 @@
                 Entrar
               </button>
               
-              <div class="banner" style="margin-top:16px;text-align:center;">
-                ${icon('database')} Base de dados local IndexedDB
+              ${!GDrive.isSignedIn ? `
+                <div style="position:relative;margin:24px 0;">
+                  <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,0.2);"></div>
+                  <div style="position:relative;text-align:center;">
+                    <span style="background:white;padding:0 12px;color:var(--muted);font-size:13px;font-weight:600;">OU</span>
+                  </div>
+                </div>
+                
+                <button class="btn" style="width:100%;background:rgba(66,133,244,0.1);color:#4285f4;border:1px solid rgba(66,133,244,0.3);font-weight:600;" onclick="connectAndLoadFromDrive()">
+                  <svg style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+                  Conectar ao Google Drive
+                </button>
+                <p class="muted" style="text-align:center;margin-top:8px;font-size:12px;">
+                  💡 Carregar dados de outro dispositivo
+                </p>
+              ` : `
+                <div style="margin-top:16px;padding:12px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;text-align:center;">
+                  <div style="color:#059669;font-size:14px;font-weight:600;margin-bottom:4px;">
+                    <svg style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Google Drive Conectado
+                  </div>
+                  <p class="muted" style="font-size:12px;margin:4px 0 0 0;">
+                    Dados sincronizados na cloud
+                  </p>
+                </div>
+              `}
+              
+              <p class="muted" style="text-align:center;margin-top:24px;font-size:13px;">
+                Primeiro acesso? Use:<br/>
+                <strong style="color:rgba(255,255,255,0.9);">admin@condopro.pt</strong> / <strong style="color:rgba(255,255,255,0.9);">admin123</strong>
+              </p>
+              
+              <div style="margin-top:16px;text-align:center;font-size:12px;color:rgba(255,255,255,0.6);">
+                <svg style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+                ${GDrive.isSignedIn ? 'Google Drive + Cache Local' : 'Base de dados local IndexedDB'}
               </div>
             </div>
           </div>
@@ -2008,7 +1974,7 @@
             <div>
               ${isAdmin ? `
                 <div class="card">
-                  <h3>Google Drive - Base de Dados</h3>
+                  <h3>Google Drive (Opcional)</h3>
                   
                   ${GDrive.isSignedIn ? `
                     <div class="gdrive-status">
@@ -2016,16 +1982,16 @@
                       <div>
                         <strong>Conectado ao Google Drive</strong>
                         <div class="muted" style="font-size: 12px; margin-top: 2px;">
-                          ✅ Dados guardados em: ${GDrive.folderName}
+                          ✅ Dados sincronizados na cloud
                         </div>
                       </div>
                     </div>
                     
-                    <div style="background: #dbeafe; padding: 12px; border-radius: 8px; margin: 16px 0; font-size: 13px;">
-                      <strong style="color: #1e40af;">ℹ️ Importante:</strong>
-                      <p style="color: #1e3a8a; margin-top: 6px;">
-                        O Google Drive é a <strong>base de dados principal</strong> do CondoPro. 
-                        Todos os dados são guardados e carregados de lá. Podes aceder de qualquer dispositivo!
+                    <div style="background: #d1fae5; padding: 12px; border-radius: 8px; margin: 16px 0; font-size: 13px;">
+                      <strong style="color: #065f46;">✅ Sincronização Ativa!</strong>
+                      <p style="color: #064e3b; margin-top: 6px;">
+                        Os dados são guardados automaticamente no Google Drive.
+                        Podes aceder de qualquer dispositivo com a mesma conta Google.
                       </p>
                     </div>
                     
@@ -2046,13 +2012,24 @@
                       </p>
                     </div>
                   ` : `
-                    <p class="muted">⚠️ Precisas conectar ao Google Drive para usar o CondoPro.</p>
-                    <p class="muted" style="font-size: 12px; margin-top: 8px;">
-                      O Google Drive é a base de dados principal da aplicação.
-                    </p>
+                    <div style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+                      <strong style="color: #92400e;">ℹ️ Google Drive não conectado</strong>
+                      <p style="color: #78350f; margin-top: 6px;">
+                        Os dados estão apenas guardados localmente neste dispositivo.
+                        Conecta ao Google Drive para sincronizar entre dispositivos.
+                      </p>
+                    </div>
+                    
                     <button class="btn primary" onclick="GDrive.signIn()">
                       ${icon('cloud')} Conectar ao Google Drive
                     </button>
+                    
+                    <p class="muted" style="font-size: 12px; margin-top: 12px;">
+                      <strong>Vantagens:</strong><br/>
+                      • Acesso de qualquer dispositivo<br/>
+                      • Backups automáticos na cloud<br/>
+                      • Partilha entre múltiplos utilizadores
+                    </p>
                   `}
                 </div>
               ` : ''}
@@ -4571,6 +4548,60 @@ ${settings.email}`;
       } catch (error) {
         console.error('Erro ao trocar conta:', error);
         toast('❌ Erro ao desconectar');
+      }
+    }
+    
+    async function connectToGoogleDrive() {
+      try {
+        await GDrive.signIn();
+        toast('✅ Conectado ao Google Drive!');
+        
+        // Recarregar dados do Drive
+        app.state = await getState();
+        app.snapshots = await getSnapshots();
+        
+        // Atualizar tela de login
+        app.render();
+      } catch (error) {
+        console.error('Erro ao conectar:', error);
+        toast('❌ Erro ao conectar ao Google Drive');
+      }
+    }
+    
+    async function connectAndLoadFromDrive() {
+      try {
+        // Mostrar loading
+        toast('🔄 Conectando ao Google Drive...');
+        
+        // Conectar ao Google Drive
+        await GDrive.signIn();
+        
+        // Tentar carregar último backup
+        toast('📥 Procurando dados...');
+        const driveData = await GDrive.loadLatestBackup();
+        
+        if (driveData) {
+          // Dados encontrados! Carregar localmente
+          const normalized = normalizeState(driveData);
+          await DB.write(normalized, 'state', 'main');
+          await createSnapshot(normalized, 'Dados carregados do Google Drive');
+          
+          // Atualizar estado da app
+          app.state = normalized;
+          app.snapshots = await getSnapshots();
+          
+          toast('✅ Dados carregados do Google Drive!');
+          console.log('✅ Dados sincronizados do Drive:', normalized.users.length, 'utilizadores');
+        } else {
+          // Sem dados no Drive
+          toast('ℹ️ Sem dados no Google Drive. Usa dados locais ou cria novos.');
+        }
+        
+        // Atualizar interface
+        app.render();
+      } catch (error) {
+        console.error('Erro ao conectar e carregar:', error);
+        toast('❌ Erro: ' + (error.message || 'Não foi possível conectar'));
       }
     }
     
