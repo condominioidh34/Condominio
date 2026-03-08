@@ -4619,48 +4619,89 @@ ${settings.email}`;
     async function connectAndLoadFromDrive() {
       try {
         // Mostrar loading
-        toast('🔄 Conectando ao Google Drive...');
+        toast('🔄 Conectando ao Google Drive...', 3000);
         
         // Conectar ao Google Drive
         await GDrive.signIn();
         
-        // Tentar carregar último backup
-        toast('📥 Procurando dados...');
-        const driveData = await GDrive.loadLatestBackup();
+        // Aguardar um pouco para garantir que a conexão está estabelecida
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        if (driveData) {
-          // Dados encontrados! Carregar localmente
-          const normalized = normalizeState(driveData);
-          await DB.write(normalized, 'state', 'main');
-          await createSnapshot(normalized, 'Dados carregados do Google Drive');
+        // Verificar se está realmente conectado
+        if (!GDrive.isSignedIn) {
+          throw new Error('Não foi possível conectar ao Google Drive');
+        }
+        
+        toast('📥 Procurando backups no Drive...', 3000);
+        console.log('🔍 Procurando backups...');
+        
+        // Listar backups disponíveis
+        const backups = await GDrive.listBackups();
+        console.log('📦 Backups encontrados:', backups.length);
+        
+        if (!backups || backups.length === 0) {
+          // SEM dados no Drive
+          console.log('ℹ️ Nenhum backup encontrado');
+          toast('ℹ️ Sem dados no Google Drive', 5000);
           
-          // IMPORTANTE: Recarregar COMPLETAMENTE o estado da app
-          await app.refresh();
-          
-          toast('✅ Dados carregados! Podes fazer login agora.', 5000);
-          console.log('✅ Dados sincronizados do Drive:', normalized.users.length, 'utilizadores');
-          
-          // Mostrar alerta adicional
-          setTimeout(() => {
-            alert('✅ Dados carregados do Google Drive!\n\n' + 
-                  normalized.users.length + ' utilizador(es) encontrado(s).\n\n' +
-                  'Podes fazer login agora com as tuas credenciais.');
-          }, 500);
-        } else {
-          // Sem dados no Drive
-          toast('ℹ️ Sem dados no Google Drive. Usa dados locais.', 5000);
           alert('ℹ️ Não foram encontrados dados no Google Drive.\n\n' +
                 'Se é a primeira vez, faz login normalmente.\n' +
                 'Os dados serão guardados localmente.');
           
-          // Refresh mesmo assim para mostrar interface atualizada
+          // Refresh para mostrar interface com Drive conectado
           await app.refresh();
+          return;
         }
+        
+        // TEM dados! Carregar o mais recente
+        console.log('✅ Encontrados', backups.length, 'backup(s)');
+        console.log('📥 Carregando backup mais recente:', backups[0].name);
+        
+        toast('📥 Carregando dados...', 3000);
+        
+        const driveData = await GDrive.downloadBackup(backups[0].id);
+        
+        if (!driveData) {
+          throw new Error('Erro ao descarregar backup');
+        }
+        
+        console.log('✅ Dados descarregados:', driveData);
+        
+        // Normalizar e salvar localmente
+        const normalized = normalizeState(driveData);
+        
+        console.log('✅ Dados normalizados:', normalized.users.length, 'utilizadores');
+        
+        // Salvar no IndexedDB
+        await DB.write(normalized, 'state', 'main');
+        await createSnapshot(normalized, 'Dados carregados do Google Drive');
+        
+        // IMPORTANTE: Recarregar COMPLETAMENTE o estado da app
+        app.state = normalized;
+        app.snapshots = await getSnapshots();
+        
+        console.log('✅ Estado da app atualizado');
+        
+        // Renderizar novamente (deve mostrar login normal agora)
+        app.render();
+        
+        // Notificar sucesso
+        toast('✅ Dados carregados com sucesso!', 5000);
+        
+        setTimeout(() => {
+          alert('✅ Dados carregados do Google Drive!\n\n' + 
+                normalized.users.length + ' utilizador(es) encontrado(s).\n\n' +
+                'Podes fazer login agora com as tuas credenciais.\n\n' +
+                'Email: ' + (normalized.users[0]?.email || 'N/A'));
+        }, 500);
+        
       } catch (error) {
-        console.error('Erro ao conectar e carregar:', error);
-        toast('❌ Erro: ' + (error.message || 'Não foi possível conectar'));
+        console.error('❌ Erro ao conectar e carregar:', error);
+        toast('❌ Erro: ' + (error.message || 'Não foi possível conectar'), 5000);
+        
         alert('❌ Erro ao conectar ao Google Drive:\n\n' + 
-              (error.message || 'Tenta novamente ou contacta o suporte.'));
+              (error.message || 'Tenta novamente.') + '\n\n' +
+              'Detalhes no console (F12)');
       }
     }
     
