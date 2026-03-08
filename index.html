@@ -556,7 +556,7 @@
     // CONSTANTS & CONFIG
     // ============================================
     const GOOGLE_CLIENT_ID = '644033784604-mng4dqqg3bkeoqfeodv3qmjtq2sudt0g.apps.googleusercontent.com';
-    const GOOGLE_API_KEY = 'AIzaSyDZ62XDIfT4cXmnBzXkJ7Ci6Gf6LKbKhLs'; // API Key opcional - deixa vazio
+    const GOOGLE_API_KEY = 'AIzaSyDZ62XDIfT4cXmnBzXkJ7Ci6Gf6LKbKhLs';
     const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
     
@@ -615,7 +615,7 @@
     // DATABASE (IndexedDB)
     // ============================================
     const DB = {
-      name: 'Condominio',
+      name: 'CondoProDB',
       version: 2,
       async open() {
         return new Promise((resolve, reject) => {
@@ -1545,6 +1545,9 @@
                             ${isAdmin ? `
                               <button class="btn sm" onclick="openMeetingModal('${m.id}')">${icon('edit')}</button>
                               ${!m.status || m.status === 'draft' ? `
+                                <button class="btn sm" onclick="notifyUsers(app.state.meetings.find(x => x.id === '${m.id}'), 'meeting')" title="Enviar Convocatória">
+                                  ${icon('upload')} Convocatória
+                                </button>
                                 <button class="btn sm success" onclick="startVoting('${m.id}')">${icon('vote')} Iniciar Votação</button>
                               ` : ''}
                               ${m.status === 'voting' ? `
@@ -2346,6 +2349,61 @@
       });
     }
     
+    function notifyUsers(meeting, messageType = 'voting') {
+      const activeUsers = app.state.users.filter(u => u.active && u.email);
+      
+      if (activeUsers.length === 0) {
+        return toast('Nenhum utilizador com email configurado');
+      }
+      
+      const emails = activeUsers.map(u => u.email).join(',');
+      const settings = app.state.settings;
+      
+      let subject, body;
+      
+      if (messageType === 'voting') {
+        subject = `Votação Iniciada: ${meeting.title}`;
+        body = `Olá,
+
+Foi iniciada uma votação para a reunião "${meeting.title}".
+
+📅 Data: ${datePT(meeting.date)} às ${meeting.time}
+📍 Local: ${meeting.place}
+
+PONTOS PARA VOTAÇÃO:
+${meeting.agendaItems.map((item, i) => `${i + 1}. ${item.title}`).join('\n')}
+
+Por favor, acede ao sistema CondoPro para registar o teu voto.
+
+---
+${settings.condoName}
+${settings.email}`;
+      } else if (messageType === 'meeting') {
+        subject = `Convocatória: ${meeting.title}`;
+        body = `Olá,
+
+Fica convocado(a) para a reunião "${meeting.title}".
+
+📅 Data: ${datePT(meeting.date)} às ${meeting.time}
+📍 Local: ${meeting.place}
+
+ORDEM DE TRABALHOS:
+${meeting.agendaItems.map((item, i) => `${i + 1}. ${item.title}`).join('\n')}
+
+---
+${settings.condoName}
+${settings.email}`;
+      }
+      
+      // Criar mailto link
+      const mailtoLink = `mailto:?bcc=${encodeURIComponent(emails)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      
+      // Abrir cliente de email
+      window.open(mailtoLink, '_blank');
+      
+      toast('Cliente de email aberto com mensagem pré-preenchida');
+    }
+    
     async function startVoting(id) {
       const meeting = app.state.meetings.find(m => m.id === id);
       
@@ -2353,7 +2411,7 @@
         return toast('Adiciona pontos à ordem de trabalhos antes de iniciar a votação');
       }
       
-      if (!confirm('Iniciar votação para esta reunião? Os condóminos poderão votar nos pontos da ordem de trabalhos.')) {
+      if (!confirm('Iniciar votação para esta reunião? Todos os utilizadores poderão votar nos pontos da ordem de trabalhos.')) {
         return;
       }
       
@@ -2370,6 +2428,11 @@
       await saveState(app.state, 'Iniciou votação');
       await app.refresh();
       toast('Votação iniciada');
+      
+      // Perguntar se quer notificar utilizadores
+      if (confirm('Notificar todos os utilizadores por email sobre esta votação?')) {
+        notifyUsers(meeting, 'voting');
+      }
     }
     
     async function closeVoting(id) {
@@ -2390,7 +2453,7 @@
     }
     
     function generateFinalMinutes(meeting) {
-      const activeUsers = app.state.users.filter(u => u.role === 'user' && u.active);
+      const activeUsers = app.state.users.filter(u => u.active);
       const totalVoters = activeUsers.length;
       const quorum = Math.ceil(totalVoters / 2);
       
@@ -2424,12 +2487,12 @@
     
     function viewMeetingVoting(id) {
       const meeting = app.state.meetings.find(m => m.id === id);
-      const activeUsers = app.state.users.filter(u => u.role === 'user' && u.active);
+      const activeUsers = app.state.users.filter(u => u.active);
       const totalVoters = activeUsers.length;
       const quorum = Math.ceil(totalVoters / 2);
       
       const isVoting = meeting.status === 'voting';
-      const canVote = isVoting && app.currentUser.role === 'user';
+      const canVote = isVoting; // Todos podem votar (admins e condóminos)
       
       const agendaItemsHtml = meeting.agendaItems.map(item => {
         const votes = item.votes || {};
