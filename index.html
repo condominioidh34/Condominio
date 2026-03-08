@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gestão de Condomínios</title>
+  <title>CondoPro - Gestão de Condomínios</title>
   <style>
     :root {
       --primary: #1e40af;
@@ -567,6 +567,7 @@
     const icon = (name) => {
       const icons = {
         building: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>',
+        home: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>',
         dashboard: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 13a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z"/></svg>',
         users: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>',
         euro: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
@@ -1004,6 +1005,7 @@
       state: null,
       snapshots: [],
       dashboardYear: new Date().getFullYear(),
+      dashboardUserId: 'all', // 'all' ou userId específico
       
       async init() {
         // Initialize Google Drive
@@ -1221,12 +1223,26 @@
       },
       
       renderDashboard() {
-        const yearPayments = this.state.payments.filter(p => new Date(p.month).getFullYear() === this.dashboardYear);
+        const isAdmin = this.currentUser.role === 'admin';
+        
+        // Se não é admin, força filtro para apenas seus dados
+        const userId = isAdmin ? this.dashboardUserId : this.currentUser.id;
+        
+        // Filtrar pagamentos
+        let yearPayments = this.state.payments.filter(p => new Date(p.month).getFullYear() === this.dashboardYear);
+        if (userId !== 'all') {
+          yearPayments = yearPayments.filter(p => p.userId === userId);
+        }
+        
         const totalReceived = yearPayments.filter(p => p.status === 'Pago').reduce((sum, p) => sum + p.amount, 0);
         const totalPending = yearPayments.filter(p => p.status === 'Pendente').reduce((sum, p) => sum + p.amount, 0);
         const totalExpected = yearPayments.reduce((sum, p) => sum + p.amount, 0);
+        
+        // Estatísticas gerais (apenas para admin)
         const activeCondos = this.state.users.filter(u => u.active && u.role === 'user').length;
-        const openIssues = this.state.issues.filter(i => i.status === 'Pendente').length;
+        const openIssues = isAdmin 
+          ? this.state.issues.filter(i => i.status === 'Pendente').length
+          : this.state.issues.filter(i => i.status === 'Pendente' && i.userId === this.currentUser.id).length;
         
         // Gráfico de pagamentos por mês
         const monthlyData = {};
@@ -1254,11 +1270,26 @@
         const receivedPercent = totalExpected > 0 ? (totalReceived / totalExpected * 100).toFixed(1) : 0;
         const pendingPercent = totalExpected > 0 ? (totalPending / totalExpected * 100).toFixed(1) : 0;
         
+        // Seletor de condómino (apenas para admin)
+        const userSelector = isAdmin ? `
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 18px;">
+            <label style="font-weight: 600;">Filtrar por:</label>
+            <select id="dashboardUser" onchange="app.dashboardUserId = this.value; app.render();" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
+              <option value="all" ${userId === 'all' ? 'selected' : ''}>Todos os Condóminos</option>
+              ${this.state.users.filter(u => u.role === 'user').map(u => `
+                <option value="${u.id}" ${userId === u.id ? 'selected' : ''}>${escapeHtml(u.name)} (${escapeHtml(u.unit)})</option>
+              `).join('')}
+            </select>
+          </div>
+        ` : '';
+        
         return `
+          ${userSelector}
+          
           <div class="grid stats">
             <div class="card stat-card">
               <div>
-                <div class="muted">Total Recebido (${this.dashboardYear})</div>
+                <div class="muted">${userId === 'all' ? 'Total' : 'Meus Pagamentos'} Recebido (${this.dashboardYear})</div>
                 <div class="stat-value">${money(totalReceived)}</div>
                 <div style="margin-top: 4px; font-size: 13px; color: var(--success);">${receivedPercent}% do total</div>
               </div>
@@ -1267,27 +1298,38 @@
             
             <div class="card stat-card">
               <div>
-                <div class="muted">Total Pendente</div>
+                <div class="muted">${userId === 'all' ? 'Total' : 'Meus Pagamentos'} Pendente</div>
                 <div class="stat-value">${money(totalPending)}</div>
                 <div style="margin-top: 4px; font-size: 13px; color: var(--warning);">${pendingPercent}% do total</div>
               </div>
               <div class="stat-icon warning">${icon('alert')}</div>
             </div>
             
-            <div class="card stat-card">
-              <div>
-                <div class="muted">Condóminos Ativos</div>
-                <div class="stat-value">${activeCondos}</div>
-                <div style="margin-top: 4px; font-size: 13px; color: var(--muted);">${this.state.users.filter(u => u.role === 'user').length} total</div>
+            ${isAdmin ? `
+              <div class="card stat-card">
+                <div>
+                  <div class="muted">Condóminos Ativos</div>
+                  <div class="stat-value">${activeCondos}</div>
+                  <div style="margin-top: 4px; font-size: 13px; color: var(--muted);">${this.state.users.filter(u => u.role === 'user').length} total</div>
+                </div>
+                <div class="stat-icon">${icon('users')}</div>
               </div>
-              <div class="stat-icon">${icon('users')}</div>
-            </div>
+            ` : `
+              <div class="card stat-card">
+                <div>
+                  <div class="muted">Minha Quota Mensal</div>
+                  <div class="stat-value">${money(this.currentUser.quota || 0)}</div>
+                  <div style="margin-top: 4px; font-size: 13px; color: var(--muted);">Fração ${escapeHtml(this.currentUser.unit)}</div>
+                </div>
+                <div class="stat-icon">${icon('home')}</div>
+              </div>
+            `}
             
             <div class="card stat-card">
               <div>
-                <div class="muted">Ocorrências Abertas</div>
+                <div class="muted">${isAdmin ? 'Ocorrências Abertas' : 'Minhas Ocorrências'}</div>
                 <div class="stat-value">${openIssues}</div>
-                <div style="margin-top: 4px; font-size: 13px; color: var(--muted);">${this.state.issues.length} total</div>
+                <div style="margin-top: 4px; font-size: 13px; color: var(--muted);">${isAdmin ? this.state.issues.length : this.state.issues.filter(i => i.userId === this.currentUser.id).length} total</div>
               </div>
               <div class="stat-icon danger">${icon('alert')}</div>
             </div>
@@ -1662,6 +1704,59 @@
         const s = this.state.settings;
         const isAdmin = this.currentUser.role === 'admin';
         
+        // Para condóminos: mostrar apenas seus dados pessoais
+        if (!isAdmin) {
+          return `
+            <div class="card">
+              <h3>Meus Dados Pessoais</h3>
+              <p class="muted" style="margin-bottom: 20px;">Apenas o administrador pode editar estas informações. Para alterações, contacte a administração.</p>
+              
+              <div class="field">
+                <label>Nome Completo</label>
+                <input value="${escapeHtml(this.currentUser.name)}" disabled />
+              </div>
+              
+              <div class="subgrid">
+                <div class="field">
+                  <label>Email</label>
+                  <input type="email" value="${escapeHtml(this.currentUser.email)}" disabled />
+                </div>
+                <div class="field">
+                  <label>Fração</label>
+                  <input value="${escapeHtml(this.currentUser.unit)}" disabled />
+                </div>
+              </div>
+              
+              <div class="subgrid">
+                <div class="field">
+                  <label>Telefone</label>
+                  <input value="${escapeHtml(this.currentUser.phone || 'Não definido')}" disabled />
+                </div>
+                <div class="field">
+                  <label>NIF</label>
+                  <input value="${escapeHtml(this.currentUser.nif || 'Não definido')}" disabled />
+                </div>
+              </div>
+              
+              <div class="field">
+                <label>Quota Mensal</label>
+                <input value="${money(this.currentUser.quota || 0)}" disabled />
+              </div>
+              
+              <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                <h4>Segurança</h4>
+                <button class="btn primary" onclick="openChangePasswordModal()">
+                  ${icon('cog')} Alterar Minha Password
+                </button>
+                <p class="muted" style="font-size: 13px; margin-top: 10px;">
+                  Esqueceu a password? Contacte o administrador para fazer reset.
+                </p>
+              </div>
+            </div>
+          `;
+        }
+        
+        // Para admins: interface completa
         return `
           <div class="grid" style="grid-template-columns: 1fr 1fr;">
             <div class="card">
@@ -1869,6 +1964,62 @@
     function closeModal() {
       const modal = document.querySelector('.modal-overlay');
       if (modal) modal.remove();
+    }
+    
+    function openChangePasswordModal() {
+      openModal(
+        'Alterar Password',
+        `
+          <div class="field">
+            <label>Password Atual</label>
+            <input type="password" id="current_password" placeholder="Digite sua password atual" />
+          </div>
+          
+          <div class="field">
+            <label>Nova Password</label>
+            <input type="password" id="new_password" placeholder="Digite nova password" />
+          </div>
+          
+          <div class="field">
+            <label>Confirmar Nova Password</label>
+            <input type="password" id="confirm_password" placeholder="Confirme nova password" />
+          </div>
+        `,
+        'Alterar Password',
+        async () => {
+          const currentPwd = byId('current_password').value.trim();
+          const newPwd = byId('new_password').value.trim();
+          const confirmPwd = byId('confirm_password').value.trim();
+          
+          // Validações
+          if (!currentPwd || !newPwd || !confirmPwd) {
+            return toast('Preencha todos os campos');
+          }
+          
+          if (app.currentUser.password !== currentPwd) {
+            return toast('Password atual incorreta');
+          }
+          
+          if (newPwd.length < 6) {
+            return toast('Nova password deve ter pelo menos 6 caracteres');
+          }
+          
+          if (newPwd !== confirmPwd) {
+            return toast('As passwords não coincidem');
+          }
+          
+          // Atualizar password
+          app.currentUser.password = newPwd;
+          const userInState = app.state.users.find(u => u.id === app.currentUser.id);
+          if (userInState) {
+            userInState.password = newPwd;
+          }
+          
+          await saveState(app.state, 'Alterou password');
+          closeModal();
+          toast('Password alterada com sucesso!');
+        }
+      );
     }
     
     // ============================================
