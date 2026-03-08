@@ -721,7 +721,7 @@
       
       async signIn() {
         try {
-          await gapi.auth2.getAuthInstance().signIn();
+          await google.accounts.oauth2.initTokenClient();
           toast('Conectado ao Google Drive');
         } catch (error) {
           console.error('Sign-in error:', error);
