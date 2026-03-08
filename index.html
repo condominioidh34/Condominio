@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CondoPro Cloud Edition</title>
-  <meta name="description" content="Sistema de Gestão de Condomínios na Cloud">
+  <title>CondoPro - Gestão de Condomínios</title>
   <style>
     :root {
       --primary: #1e40af;
@@ -29,77 +28,19 @@
     html, body {
       margin: 0;
       padding: 0;
-      font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
       color: var(--text);
       background: var(--bg);
     }
     body { min-height: 100vh; }
     img { max-width: 100%; }
     .hidden { display: none !important; }
-    
-    /* Loading Screen */
-    .loading-screen {
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      display: grid;
-      place-items: center;
-      z-index: 9999;
-      color: white;
-    }
-    .loading-spinner {
-      width: 60px;
-      height: 60px;
-      border: 4px solid rgba(255,255,255,.2);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    .loading-text {
-      margin-top: 20px;
-      font-size: 16px;
-      opacity: 0.9;
-    }
-    
-    /* Cloud Status Banner */
-    .cloud-status {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      padding: 8px 16px;
-      background: linear-gradient(90deg, #4285f4 0%, #34a853 100%);
-      color: white;
-      text-align: center;
-      font-size: 13px;
-      font-weight: 600;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    .cloud-status.syncing {
-      background: linear-gradient(90deg, #fbbc04 0%, #ea4335 100%);
-    }
-    .cloud-status.error {
-      background: var(--danger);
-    }
-    
     .app-shell { display: grid; grid-template-columns: 292px 1fr; min-height: 100vh; }
     .sidebar {
       background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
       color: white;
       padding: 24px 18px;
       box-shadow: 3px 0 18px rgba(0,0,0,0.08);
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow-y: auto;
     }
     .brand {
       display: flex;
@@ -125,28 +66,23 @@
     .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
     .brand h1 { margin: 0; font-size: 24px; letter-spacing: .2px; }
     .brand small { opacity: .82; display: block; margin-top: 3px; }
-    .cloud-badge {
+    .db-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
       margin-top: 6px;
       padding: 5px 9px;
       border-radius: 999px;
-      background: linear-gradient(90deg, rgba(66, 133, 244, 0.3), rgba(52, 168, 83, 0.3));
-      border: 1px solid rgba(255,255,255,.3);
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.16);
       font-size: 11px;
       font-weight: 700;
       letter-spacing: .04em;
       text-transform: uppercase;
     }
-    .cloud-badge svg {
-      width: 14px;
-      height: 14px;
-      animation: pulse 2s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+    .db-badge.gdrive {
+      background: rgba(66, 133, 244, 0.2);
+      border-color: rgba(66, 133, 244, 0.3);
     }
     .user-card {
       background: rgba(255,255,255,.1);
@@ -286,10 +222,9 @@
       gap: 8px;
       align-items: center;
       font-size: 14px;
-      transition: all 0.2s;
     }
     .btn svg { width: 16px; height: 16px; }
-    .btn:hover { background: var(--bg); transform: translateY(-1px); }
+    .btn:hover { background: var(--bg); }
     .btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
     .btn.primary:hover { background: var(--primary-dark); }
     .btn.success { background: var(--success); color: white; border-color: var(--success); }
@@ -368,7 +303,6 @@
       box-shadow: 0 12px 30px rgba(0,0,0,.2);
       animation: toastIn .3s ease-out;
       z-index: 2000;
-      max-width: 400px;
     }
     @keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     .banner {
@@ -471,7 +405,6 @@
       gap: 16px;
       font-size: 12px;
       margin-top: 6px;
-      flex-wrap: wrap;
     }
     .vote-stats span {
       display: flex;
@@ -526,123 +459,49 @@
       background: var(--success-soft);
       color: var(--success);
     }
-
-    /* Welcome Screen */
-    .welcome-screen {
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      padding: 20px;
-    }
-    .welcome-card {
-      background: white;
-      border-radius: 24px;
-      padding: 40px;
-      max-width: 500px;
-      width: 100%;
-      text-align: center;
-      box-shadow: 0 24px 60px rgba(0,0,0,.2);
-    }
-    .welcome-card .logo {
-      width: 100px;
-      height: 100px;
-      margin: 0 auto 24px;
-      background: var(--bg-alt);
-      border-radius: 24px;
-      display: grid;
-      place-items: center;
-      color: var(--primary);
-    }
-    .welcome-card .logo svg {
-      width: 50px;
-      height: 50px;
-    }
-    .welcome-card h1 {
-      margin: 0 0 12px;
-      font-size: 32px;
-      color: var(--text);
-    }
-    .welcome-card p {
-      color: var(--muted);
-      margin: 0 0 32px;
-      line-height: 1.6;
-    }
-    .welcome-card .btn {
-      width: 100%;
-      justify-content: center;
-      padding: 14px 20px;
-      font-size: 16px;
-    }
-    .welcome-card .feature-list {
-      margin: 24px 0;
-      text-align: left;
-    }
-    .welcome-card .feature-item {
+    .gdrive-status {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px;
-      margin-bottom: 8px;
-      background: var(--bg-alt);
-      border-radius: 12px;
+      gap: 8px;
+      padding: 10px 14px;
+      background: rgba(66, 133, 244, 0.1);
+      border: 1px solid rgba(66, 133, 244, 0.2);
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 12px;
     }
-    .welcome-card .feature-item svg {
-      width: 24px;
-      height: 24px;
-      color: var(--success);
-      flex-shrink: 0;
+    .gdrive-status svg {
+      width: 20px;
+      height: 20px;
+      color: #4285f4;
+    }
+    .gdrive-status.syncing {
+      background: rgba(251, 191, 36, 0.1);
+      border-color: rgba(251, 191, 36, 0.2);
+    }
+    .gdrive-status.syncing svg {
+      color: #d97706;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
-  <div id="loading" class="loading-screen">
-    <div>
-      <div class="loading-spinner"></div>
-      <div class="loading-text">A carregar CondoPro Cloud...</div>
-    </div>
-  </div>
-  
-  <div id="cloudStatus" class="cloud-status hidden">
-    <svg fill="currentColor" viewBox="0 0 20 20" width="16" height="16">
-      <path d="M5.5 16a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 16h-8z"/>
-    </svg>
-    <span id="cloudStatusText">Sincronizado com Google Drive</span>
-  </div>
-  
   <div id="app"></div>
   
   <script src="https://apis.google.com/js/api.js"></script>
   
   <script>
     // ============================================
-    // CONFIGURAÇÃO - EDITA AQUI!
+    // CONSTANTS & CONFIG
     // ============================================
-    const CONFIG = {
-      // Obtém estas credenciais em: https://console.cloud.google.com/
-      GOOGLE_CLIENT_ID: '644033784604-mng4dqqg3bkeoqfeodv3qmjtq2sudt0g.apps.googleusercontent.com',
-      GOOGLE_API_KEY: 'AIzaSyDZ62XDIfT4cXmnBzXkJ7Ci6Gf6LKbKhLs',
-      
-      // Nome da pasta no Google Drive onde os dados serão guardados
-      DRIVE_FOLDER_NAME: 'Condominio',
-      
-      // Intervalo de sincronização automática (em milissegundos)
-      // 30000 = 30 segundos, 60000 = 1 minuto
-      SYNC_INTERVAL: 30000,
-      
-      // Activar modo debug (mostra logs na consola)
-      DEBUG: true
-    };
-    
-    // ============================================
-    // SISTEMA DE LOGGING
-    // ============================================
-    const log = {
-      info: (...args) => CONFIG.DEBUG && console.log('[INFO]', ...args),
-      error: (...args) => console.error('[ERROR]', ...args),
-      warn: (...args) => CONFIG.DEBUG && console.warn('[WARN]', ...args),
-      success: (...args) => CONFIG.DEBUG && console.log('[SUCCESS]', ...args)
-    };
+    const GOOGLE_CLIENT_ID = '644033784604-mng4dqqg3bkeoqfeodv3qmjtq2sudt0g.apps.googleusercontent.com';
+    const GOOGLE_API_KEY = 'AIzaSyDZ62XDIfT4cXmnBzXkJ7Ci6Gf6LKbKhLs';
+    const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
+    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
     
     // ============================================
     // ICONS
@@ -656,97 +515,24 @@
         alert: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>',
         calendar: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
         cog: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
-        cloud: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>',
-        check: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>',
-        x: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>',
+        database: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>',
+        download: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>',
+        upload: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>',
         plus: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>',
         edit: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>',
         trash: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>',
         eye: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>',
+        check: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>',
+        x: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>',
         print: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>',
+        filter: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>',
+        cloud: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>',
         refresh: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>',
         vote: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>',
-        download: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>',
-        upload: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>',
+        document: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
       };
       return icons[name] || '';
     };
-    
-    // ===========================================================================================
-    // Due to character limits, I'll create this as a multi-file structure
-    // The complete implementation would be too long for a single response
-    // I'll create the core structure and a separate config file
-    // ===========================================================================================
-    
-    // Show error message for missing configuration
-    if (CONFIG.GOOGLE_CLIENT_ID === 'SEU_CLIENT_ID_AQUI.apps.googleusercontent.com') {
-      document.getElementById('loading').innerHTML = `
-        <div class="welcome-screen">
-          <div class="welcome-card">
-            <div class="logo">
-              ${icon('cloud')}
-            </div>
-            <h1>CondoPro Cloud Edition</h1>
-            <p>Bem-vindo! Para começar, precisas configurar as credenciais do Google Drive.</p>
-            
-            <div class="feature-list">
-              <div class="feature-item">
-                ${icon('check')}
-                <span><strong>Dados na Cloud</strong> - Todos os dados guardados no Google Drive</span>
-              </div>
-              <div class="feature-item">
-                ${icon('check')}
-                <span><strong>Acesso Partilhado</strong> - Múltiplos utilizadores sincronizados</span>
-              </div>
-              <div class="feature-item">
-                ${icon('check')}
-                <span><strong>100% Grátis</strong> - Sem custos de servidor</span>
-              </div>
-              <div class="feature-item">
-                ${icon('check')}
-                <span><strong>Sistema de Votações</strong> - Actas digitais completas</span>
-              </div>
-            </div>
-            
-            <div class="banner" style="text-align: left; margin-top: 24px;">
-              <strong>📖 Próximos Passos:</strong><br>
-              1. Abre o ficheiro <code>SETUP_GITHUB.md</code><br>
-              2. Segue as instruções para configurar Google Drive<br>
-              3. Cola as credenciais no topo do ficheiro <code>index.html</code><br>
-              4. Recarrega a página e está pronto!
-            </div>
-            
-            <button class="btn primary" onclick="window.open('SETUP_GITHUB.md', '_blank')" style="margin-top: 16px;">
-              ${icon('eye')} Ver Instruções de Configuração
-            </button>
-          </div>
-        </div>
-      `;
-    } else {
-      // Configuration is set - load the full application
-      // This would load the complete CondoPro code from a separate file
-      document.getElementById('loading').innerHTML = `
-        <div class="welcome-screen">
-          <div class="welcome-card">
-            <div class="logo">
-              ${icon('building')}
-            </div>
-            <h1>CondoPro Cloud</h1>
-            <p>Sistema de Gestão de Condomínios na Cloud</p>
-            <div class="loading-spinner" style="margin: 24px auto;"></div>
-            <p class="muted">A inicializar Google Drive API...</p>
-          </div>
-        </div>
-      `;
-      
-      // Load the main application script
-      const script = document.createElement('script');
-      script.src = 'condopro-app.js';
-      script.onerror = () => {
-        toast('Erro ao carregar aplicação. Verifica se o ficheiro condopro-app.js existe.');
-      };
-      document.body.appendChild(script);
-    }
     
     // ============================================
     // UTILITIES
@@ -760,27 +546,2100 @@
     const datePT = (d) => new Date(d).toLocaleDateString('pt-PT');
     const timePT = (d) => new Date(d).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
     
-    function toast(msg, duration = 3000) {
+    function toast(msg) {
       const el = document.createElement('div');
       el.className = 'toast';
       el.textContent = msg;
       document.body.appendChild(el);
-      setTimeout(() => el.remove(), duration);
+      setTimeout(() => el.remove(), 3000);
     }
     
-    function updateCloudStatus(text, type = 'success') {
-      const status = byId('cloudStatus');
-      const statusText = byId('cloudStatusText');
+    // ============================================
+    // DATABASE (IndexedDB)
+    // ============================================
+    const DB = {
+      name: 'CondoProDB',
+      version: 2,
+      async open() {
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(this.name, this.version);
+          req.onerror = () => reject(req.error);
+          req.onsuccess = () => resolve(req.result);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('state')) {
+              db.createObjectStore('state', { keyPath: 'id' });
+            }
+            if (!db.objectStoreNames.contains('snapshots')) {
+              db.createObjectStore('snapshots', { keyPath: 'id' });
+            }
+          };
+        });
+      },
+      async read(store = 'state', key = 'main') {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(store, 'readonly');
+          const req = tx.objectStore(store).get(key);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      },
+      async write(data, store = 'state', key = 'main') {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(store, 'readwrite');
+          const req = tx.objectStore(store).put({ id: key, ...data });
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+        });
+      },
+      async getAll(store = 'snapshots') {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(store, 'readonly');
+          const req = tx.objectStore(store).getAll();
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      },
+      async delete(store, key) {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(store, 'readwrite');
+          const req = tx.objectStore(store).delete(key);
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+        });
+      }
+    };
+    
+    // ============================================
+    // GOOGLE DRIVE INTEGRATION
+    // ============================================
+    const GDrive = {
+      isSignedIn: false,
+      accessToken: null,
+      folderName: 'Condominio',
+      folderId: null,
+      autoSyncEnabled: false,
+      lastSyncTime: null,
       
-      if (status && statusText) {
-        status.className = 'cloud-status';
-        if (type === 'syncing') status.classList.add('syncing');
-        if (type === 'error') status.classList.add('error');
+      async init() {
+        return new Promise((resolve) => {
+          gapi.load('client:auth2', async () => {
+            try {
+              await gapi.client.init({
+                apiKey: GOOGLE_API_KEY,
+                clientId: GOOGLE_CLIENT_ID,
+                discoveryDocs: DISCOVERY_DOCS,
+                scope: SCOPES
+              });
+              
+              const auth = gapi.auth2.getAuthInstance();
+              this.isSignedIn = auth.isSignedIn.get();
+              
+              if (this.isSignedIn) {
+                this.accessToken = auth.currentUser.get().getAuthResponse().access_token;
+                await this.ensureFolder();
+              }
+              
+              auth.isSignedIn.listen((signedIn) => {
+                this.isSignedIn = signedIn;
+                if (signedIn) {
+                  this.accessToken = auth.currentUser.get().getAuthResponse().access_token;
+                  this.ensureFolder();
+                }
+                app.render();
+              });
+              
+              resolve();
+            } catch (error) {
+              console.error('Error initializing Google Drive:', error);
+              resolve();
+            }
+          });
+        });
+      },
+      
+      async signIn() {
+        try {
+          await gapi.auth2.getAuthInstance().signIn();
+          toast('Conectado ao Google Drive');
+        } catch (error) {
+          console.error('Sign-in error:', error);
+          toast('Erro ao conectar com Google Drive');
+        }
+      },
+      
+      async signOut() {
+        await gapi.auth2.getAuthInstance().signOut();
+        this.folderId = null;
+        toast('Desconectado do Google Drive');
+      },
+      
+      async ensureFolder() {
+        if (this.folderId) return this.folderId;
         
-        statusText.textContent = text;
-        status.classList.remove('hidden');
+        try {
+          // Search for existing folder
+          const response = await gapi.client.drive.files.list({
+            q: `name='${this.folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+            spaces: 'drive',
+            fields: 'files(id, name)'
+          });
+          
+          if (response.result.files.length > 0) {
+            this.folderId = response.result.files[0].id;
+          } else {
+            // Create folder
+            const fileMetadata = {
+              name: this.folderName,
+              mimeType: 'application/vnd.google-apps.folder'
+            };
+            const folder = await gapi.client.drive.files.create({
+              resource: fileMetadata,
+              fields: 'id'
+            });
+            this.folderId = folder.result.id;
+          }
+          
+          return this.folderId;
+        } catch (error) {
+          console.error('Error ensuring folder:', error);
+          return null;
+        }
+      },
+      
+      async uploadBackup(state, filename) {
+        if (!this.isSignedIn) {
+          toast('Conecta-te ao Google Drive primeiro');
+          return false;
+        }
+        
+        try {
+          await this.ensureFolder();
+          
+          const fileMetadata = {
+            name: filename,
+            parents: [this.folderId]
+          };
+          
+          const formData = new FormData();
+          formData.append('metadata', new Blob([JSON.stringify(fileMetadata)], { type: 'application/json' }));
+          formData.append('file', new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' }));
+          
+          const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${this.accessToken}`
+            },
+            body: formData
+          });
+          
+          if (response.ok) {
+            this.lastSyncTime = new Date().toISOString();
+            toast('Backup guardado no Google Drive');
+            return true;
+          } else {
+            throw new Error('Upload failed');
+          }
+        } catch (error) {
+          console.error('Error uploading backup:', error);
+          toast('Erro ao guardar no Google Drive');
+          return false;
+        }
+      },
+      
+      async listBackups() {
+        if (!this.isSignedIn) return [];
+        
+        try {
+          await this.ensureFolder();
+          
+          const response = await gapi.client.drive.files.list({
+            q: `'${this.folderId}' in parents and trashed=false`,
+            spaces: 'drive',
+            fields: 'files(id, name, createdTime, modifiedTime)',
+            orderBy: 'modifiedTime desc'
+          });
+          
+          return response.result.files || [];
+        } catch (error) {
+          console.error('Error listing backups:', error);
+          return [];
+        }
+      },
+      
+      async downloadBackup(fileId) {
+        if (!this.isSignedIn) return null;
+        
+        try {
+          const response = await gapi.client.drive.files.get({
+            fileId: fileId,
+            alt: 'media'
+          });
+          
+          return response.result;
+        } catch (error) {
+          console.error('Error downloading backup:', error);
+          return null;
+        }
+      },
+      
+      async autoSync(state) {
+        if (!this.autoSyncEnabled || !this.isSignedIn) return;
+        
+        const filename = `auto_backup_${currentDateISO()}_${Date.now()}.json`;
+        await this.uploadBackup(state, filename);
+      }
+    };
+    
+    // ============================================
+    // STATE MANAGEMENT
+    // ============================================
+    function normalizeState(data) {
+      return {
+        users: data.users || [],
+        payments: data.payments || [],
+        issues: data.issues || [],
+        meetings: data.meetings || [],
+        settings: {
+          condoName: data.settings?.condoName || 'Meu Condomínio',
+          address: data.settings?.address || '',
+          nif: data.settings?.nif || '',
+          email: data.settings?.email || '',
+          phone: data.settings?.phone || '',
+          logoDataUrl: data.settings?.logoDataUrl || '',
+          receiptFooter: data.settings?.receiptFooter || ''
+        }
+      };
+    }
+    
+    async function getState() {
+      const raw = await DB.read('state', 'main');
+      return normalizeState(raw || {});
+    }
+    
+    async function saveState(state, label = '') {
+      await DB.write(state, 'state', 'main');
+      await createSnapshot(state, label);
+      
+      // Auto-sync to Google Drive if enabled
+      if (GDrive.autoSyncEnabled && GDrive.isSignedIn) {
+        await GDrive.autoSync(state);
       }
     }
+    
+    async function createSnapshot(state, label) {
+      const snap = {
+        id: uid(),
+        when: new Date().toISOString(),
+        label: label || 'Snapshot',
+        state: JSON.parse(JSON.stringify(state))
+      };
+      await DB.write(snap, 'snapshots', snap.id);
+    }
+    
+    async function getSnapshots() {
+      const all = await DB.getAll('snapshots');
+      return all.sort((a, b) => new Date(b.when) - new Date(a.when));
+    }
+    
+    // ============================================
+    // APPLICATION
+    // ============================================
+    const app = {
+      currentUser: null,
+      currentView: 'login',
+      state: null,
+      snapshots: [],
+      dashboardYear: new Date().getFullYear(),
+      
+      async init() {
+        // Initialize Google Drive
+        await GDrive.init();
+        
+        this.state = await getState();
+        this.snapshots = await getSnapshots();
+        
+        // Auto-login if only one admin exists (development mode)
+        if (this.state.users.length === 1 && this.state.users[0].role === 'admin') {
+          this.currentUser = this.state.users[0];
+          this.currentView = 'dashboard';
+        }
+        
+        // Create default admin if no users exist
+        if (this.state.users.length === 0) {
+          this.state.users.push({
+            id: uid(),
+            name: 'Administrador',
+            email: 'admin@condopro.pt',
+            password: 'admin123',
+            role: 'admin',
+            unit: 'Administração',
+            active: true,
+            phone: '',
+            nif: '',
+            quota: 0
+          });
+          await saveState(this.state, 'Criação de utilizador admin inicial');
+        }
+        
+        this.render();
+      },
+      
+      async refresh() {
+        this.state = await getState();
+        this.snapshots = await getSnapshots();
+        this.render();
+      },
+      
+      availableYears() {
+        const years = [...new Set(this.state.payments.map(p => new Date(p.month).getFullYear()))];
+        return years.sort((a, b) => a - b);
+      },
+      
+      render() {
+        const root = byId('app');
+        if (!root) return;
+        
+        if (!this.currentUser) {
+          root.innerHTML = this.renderLogin();
+        } else {
+          root.innerHTML = this.renderApp();
+        }
+        
+        this.attachEventListeners();
+      },
+      
+      renderLogin() {
+        return `
+          <div style="min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);">
+            <div class="card" style="width:100%;max-width:420px;margin:20px;">
+              <div style="text-align:center;margin-bottom:24px;">
+                <div style="width:80px;height:80px;margin:0 auto 16px;background:var(--bg-alt);border-radius:20px;display:grid;place-items:center;color:var(--primary);">
+                  ${icon('building')}
+                </div>
+                <h2 style="margin:0 0 6px;">CondoPro</h2>
+                <p class="muted">Gestão de Condomínios</p>
+              </div>
+              
+              <div class="field">
+                <label>Email</label>
+                <input type="email" id="login_email" placeholder="admin@condopro.pt" value="admin@condopro.pt" />
+              </div>
+              
+              <div class="field">
+                <label>Password</label>
+                <input type="password" id="login_password" placeholder="••••••••" value="admin123" />
+              </div>
+              
+              <button class="btn primary" style="width:100%;margin-top:8px;" onclick="app.login()">
+                Entrar
+              </button>
+              
+              <div class="banner" style="margin-top:16px;text-align:center;">
+                ${icon('database')} Base de dados local IndexedDB
+              </div>
+            </div>
+          </div>
+        `;
+      },
+      
+      renderApp() {
+        return `
+          <div class="app-shell">
+            ${this.renderSidebar()}
+            <div class="main">
+              ${this.renderTopbar()}
+              <div class="content">
+                ${this.renderContent()}
+              </div>
+            </div>
+          </div>
+        `;
+      },
+      
+      renderSidebar() {
+        const s = this.state.settings;
+        return `
+          <div class="sidebar">
+            <div class="brand">
+              ${s.logoDataUrl 
+                ? `<div class="brand-logo"><img src="${s.logoDataUrl}" alt="Logo" /></div>`
+                : `<div class="brand-mark">${icon('building')}</div>`
+              }
+              <div>
+                <h1>CondoPro</h1>
+                <small>${escapeHtml(s.condoName)}</small>
+                <div class="db-badge ${GDrive.isSignedIn ? 'gdrive' : ''}">
+                  ${icon(GDrive.isSignedIn ? 'cloud' : 'database')} 
+                  ${GDrive.isSignedIn ? 'Google Drive' : 'IndexedDB'}
+                </div>
+              </div>
+            </div>
+            
+            <div class="user-card">
+              <strong>${escapeHtml(this.currentUser.name)}</strong>
+              <span>${escapeHtml(this.currentUser.unit)} • ${this.currentUser.role === 'admin' ? 'Administração' : 'Condómino'}</span>
+            </div>
+            
+            <nav class="nav">
+              <button class="${this.currentView === 'dashboard' ? 'active' : ''}" onclick="app.navigate('dashboard')">
+                <span class="icon-wrap">${icon('dashboard')}</span>
+                Dashboard
+              </button>
+              ${this.currentUser.role === 'admin' ? `
+                <button class="${this.currentView === 'users' ? 'active' : ''}" onclick="app.navigate('users')">
+                  <span class="icon-wrap">${icon('users')}</span>
+                  Condóminos
+                </button>
+              ` : ''}
+              <button class="${this.currentView === 'payments' ? 'active' : ''}" onclick="app.navigate('payments')">
+                <span class="icon-wrap">${icon('euro')}</span>
+                Pagamentos
+              </button>
+              <button class="${this.currentView === 'issues' ? 'active' : ''}" onclick="app.navigate('issues')">
+                <span class="icon-wrap">${icon('alert')}</span>
+                Ocorrências
+              </button>
+              <button class="${this.currentView === 'meetings' ? 'active' : ''}" onclick="app.navigate('meetings')">
+                <span class="icon-wrap">${icon('calendar')}</span>
+                Actas
+              </button>
+              <button class="${this.currentView === 'settings' ? 'active' : ''}" onclick="app.navigate('settings')">
+                <span class="icon-wrap">${icon('cog')}</span>
+                Definições
+              </button>
+            </nav>
+            
+            <div class="sidebar-actions">
+              ${!GDrive.isSignedIn ? `
+                <button onclick="GDrive.signIn()">
+                  ${icon('cloud')} Conectar Google Drive
+                </button>
+              ` : `
+                <button onclick="GDrive.signOut()">
+                  ${icon('cloud')} Desconectar Drive
+                </button>
+              `}
+              <button onclick="app.logout()">
+                ${icon('x')} Sair
+              </button>
+            </div>
+          </div>
+        `;
+      },
+      
+      renderTopbar() {
+        const titles = {
+          dashboard: 'Dashboard',
+          users: 'Condóminos',
+          payments: 'Pagamentos',
+          issues: 'Ocorrências',
+          meetings: 'Actas e Votações',
+          settings: 'Definições'
+        };
+        
+        return `
+          <div class="topbar">
+            <div>
+              <h2>${titles[this.currentView] || 'CondoPro'}</h2>
+              <p>Gestão de Condomínios</p>
+            </div>
+            <div class="toolbar">
+              ${GDrive.isSignedIn && GDrive.lastSyncTime ? `
+                <div class="pill success">
+                  ${icon('check')} Sincronizado ${timePT(GDrive.lastSyncTime)}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      },
+      
+      renderContent() {
+        switch (this.currentView) {
+          case 'dashboard': return this.renderDashboard();
+          case 'users': return this.renderUsers();
+          case 'payments': return this.renderPayments();
+          case 'issues': return this.renderIssues();
+          case 'meetings': return this.renderMeetings();
+          case 'settings': return this.renderSettings();
+          default: return '<p>Página não encontrada</p>';
+        }
+      },
+      
+      renderDashboard() {
+        const yearPayments = this.state.payments.filter(p => new Date(p.month).getFullYear() === this.dashboardYear);
+        const totalReceived = yearPayments.filter(p => p.status === 'Pago').reduce((sum, p) => sum + p.amount, 0);
+        const totalPending = yearPayments.filter(p => p.status === 'Pendente').reduce((sum, p) => sum + p.amount, 0);
+        const activeCondos = this.state.users.filter(u => u.active && u.role === 'user').length;
+        const openIssues = this.state.issues.filter(i => i.status === 'Pendente').length;
+        
+        return `
+          <div class="grid stats">
+            <div class="card stat-card">
+              <div>
+                <div class="muted">Total Recebido (${this.dashboardYear})</div>
+                <div class="stat-value">${money(totalReceived)}</div>
+              </div>
+              <div class="stat-icon success">${icon('euro')}</div>
+            </div>
+            
+            <div class="card stat-card">
+              <div>
+                <div class="muted">Total Pendente</div>
+                <div class="stat-value">${money(totalPending)}</div>
+              </div>
+              <div class="stat-icon warning">${icon('alert')}</div>
+            </div>
+            
+            <div class="card stat-card">
+              <div>
+                <div class="muted">Condóminos Ativos</div>
+                <div class="stat-value">${activeCondos}</div>
+              </div>
+              <div class="stat-icon">${icon('users')}</div>
+            </div>
+            
+            <div class="card stat-card">
+              <div>
+                <div class="muted">Ocorrências Abertas</div>
+                <div class="stat-value">${openIssues}</div>
+              </div>
+              <div class="stat-icon danger">${icon('alert')}</div>
+            </div>
+          </div>
+          
+          <div class="grid" style="grid-template-columns: 2fr 1fr; margin-top: 18px;">
+            <div class="card">
+              <div class="card-header">
+                <h3>Pagamentos Recentes</h3>
+              </div>
+              ${this.renderRecentPayments()}
+            </div>
+            
+            <div class="card">
+              <div class="card-header">
+                <h3>Próximas Reuniões</h3>
+              </div>
+              ${this.renderUpcomingMeetings()}
+            </div>
+          </div>
+        `;
+      },
+      
+      renderRecentPayments() {
+        const recent = this.state.payments.slice(-5).reverse();
+        if (recent.length === 0) {
+          return '<div class="empty"><p>Nenhum pagamento registado</p></div>';
+        }
+        
+        return `
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Condómino</th>
+                  <th>Mês</th>
+                  <th>Valor</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${recent.map(p => {
+                  const user = this.state.users.find(u => u.id === p.userId);
+                  return `
+                    <tr>
+                      <td>${escapeHtml(user?.name || 'N/A')}</td>
+                      <td>${monthPT(p.month)}</td>
+                      <td>${money(p.amount)}</td>
+                      <td><span class="pill ${p.status === 'Pago' ? 'success' : 'warning'}">${escapeHtml(p.status)}</span></td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      },
+      
+      renderUpcomingMeetings() {
+        const today = new Date();
+        const upcoming = this.state.meetings
+          .filter(m => new Date(m.date) >= today)
+          .sort((a, b) => new Date(a.date) - new Date(b.date))
+          .slice(0, 3);
+        
+        if (upcoming.length === 0) {
+          return '<div class="empty"><p>Nenhuma reunião agendada</p></div>';
+        }
+        
+        return `
+          <div>
+            ${upcoming.map(m => `
+              <div style="padding: 12px 0; border-bottom: 1px solid var(--border);">
+                <strong>${escapeHtml(m.title)}</strong>
+                <div class="muted" style="font-size: 13px; margin-top: 4px;">
+                  ${datePT(m.date)} às ${escapeHtml(m.time)}
+                </div>
+                <div style="margin-top: 6px;">
+                  <span class="meeting-status ${m.status || 'draft'}">${m.status || 'Rascunho'}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      },
+      
+      renderUsers() {
+        if (this.currentUser.role !== 'admin') {
+          return '<div class="card"><p>Acesso negado. Apenas administradores podem gerir condóminos.</p></div>';
+        }
+        
+        const users = this.state.users.filter(u => u.role === 'user');
+        
+        return `
+          <div class="card">
+            <div class="card-header">
+              <h3>Lista de Condóminos</h3>
+              <button class="btn primary sm" onclick="openUserModal()">
+                ${icon('plus')} Novo Condómino
+              </button>
+            </div>
+            
+            ${users.length === 0 ? '<div class="empty"><p>Nenhum condómino registado</p></div>' : `
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Nome</th>
+                      <th>Fração</th>
+                      <th>Email</th>
+                      <th>Telefone</th>
+                      <th>Quota Mensal</th>
+                      <th>Estado</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${users.map(u => `
+                      <tr>
+                        <td><strong>${escapeHtml(u.name)}</strong></td>
+                        <td>${escapeHtml(u.unit)}</td>
+                        <td>${escapeHtml(u.email)}</td>
+                        <td>${escapeHtml(u.phone || '-')}</td>
+                        <td>${money(u.quota || 0)}</td>
+                        <td><span class="pill ${u.active ? 'success' : 'danger'}">${u.active ? 'Ativo' : 'Inativo'}</span></td>
+                        <td>
+                          <div class="actions">
+                            <button class="btn sm" onclick="openUserModal('${u.id}')">${icon('edit')}</button>
+                            <button class="btn sm danger" onclick="deleteUser('${u.id}')">${icon('trash')}</button>
+                          </div>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `}
+          </div>
+        `;
+      },
+      
+      renderPayments() {
+        const isAdmin = this.currentUser.role === 'admin';
+        const payments = isAdmin 
+          ? this.state.payments 
+          : this.state.payments.filter(p => p.userId === this.currentUser.id);
+        
+        return `
+          <div class="card">
+            <div class="card-header">
+              <h3>Histórico de Pagamentos</h3>
+              ${isAdmin ? `<button class="btn primary sm" onclick="openPaymentModal()">${icon('plus')} Novo Pagamento</button>` : ''}
+            </div>
+            
+            ${payments.length === 0 ? '<div class="empty"><p>Nenhum pagamento registado</p></div>' : `
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      ${isAdmin ? '<th>Condómino</th>' : ''}
+                      <th>Mês</th>
+                      <th>Descrição</th>
+                      <th>Valor</th>
+                      <th>Estado</th>
+                      <th>Data Pagamento</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${payments.map(p => {
+                      const user = this.state.users.find(u => u.id === p.userId);
+                      return `
+                        <tr>
+                          ${isAdmin ? `<td>${escapeHtml(user?.name || 'N/A')}</td>` : ''}
+                          <td>${monthPT(p.month)}</td>
+                          <td>${escapeHtml(p.description || 'Quota')}</td>
+                          <td><strong>${money(p.amount)}</strong></td>
+                          <td><span class="pill ${p.status === 'Pago' ? 'success' : 'warning'}">${escapeHtml(p.status)}</span></td>
+                          <td>${p.paidAt ? datePT(p.paidAt) : '-'}</td>
+                          <td>
+                            <div class="actions">
+                              ${isAdmin && p.status === 'Pendente' ? `<button class="btn sm success" onclick="markAsPaid('${p.id}')">${icon('check')}</button>` : ''}
+                              <button class="btn sm" onclick="printReceipt('${p.id}')">${icon('print')}</button>
+                              ${isAdmin ? `<button class="btn sm danger" onclick="deletePayment('${p.id}')">${icon('trash')}</button>` : ''}
+                            </div>
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `}
+          </div>
+        `;
+      },
+      
+      renderIssues() {
+        const isAdmin = this.currentUser.role === 'admin';
+        const issues = isAdmin 
+          ? this.state.issues 
+          : this.state.issues.filter(i => i.userId === this.currentUser.id);
+        
+        return `
+          <div class="card">
+            <div class="card-header">
+              <h3>Ocorrências</h3>
+              <button class="btn primary sm" onclick="openIssueModal()">
+                ${icon('plus')} Nova Ocorrência
+              </button>
+            </div>
+            
+            ${issues.length === 0 ? '<div class="empty"><p>Nenhuma ocorrência registada</p></div>' : `
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      ${isAdmin ? '<th>Condómino</th>' : ''}
+                      <th>Título</th>
+                      <th>Local</th>
+                      <th>Prioridade</th>
+                      <th>Estado</th>
+                      <th>Data</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${issues.map(i => {
+                      const user = this.state.users.find(u => u.id === i.userId);
+                      return `
+                        <tr>
+                          ${isAdmin ? `<td>${escapeHtml(user?.name || 'N/A')}</td>` : ''}
+                          <td><strong>${escapeHtml(i.title)}</strong></td>
+                          <td>${escapeHtml(i.location)}</td>
+                          <td><span class="pill ${i.priority === 'Alta' ? 'danger' : i.priority === 'Média' ? 'warning' : ''}">${escapeHtml(i.priority)}</span></td>
+                          <td><span class="pill ${i.status === 'Resolvido' ? 'success' : 'warning'}">${escapeHtml(i.status)}</span></td>
+                          <td>${datePT(i.createdAt)}</td>
+                          <td>
+                            <div class="actions">
+                              <button class="btn sm" onclick="viewIssue('${i.id}')">${icon('eye')}</button>
+                              ${isAdmin ? `<button class="btn sm" onclick="editIssue('${i.id}')">${icon('edit')}</button>` : ''}
+                            </div>
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `}
+          </div>
+        `;
+      },
+      
+      renderMeetings() {
+        const isAdmin = this.currentUser.role === 'admin';
+        const meetings = this.state.meetings.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        return `
+          <div class="card">
+            <div class="card-header">
+              <h3>Actas e Votações</h3>
+              ${isAdmin ? `<button class="btn primary sm" onclick="openMeetingModal()">
+                ${icon('plus')} Nova Reunião
+              </button>` : ''}
+            </div>
+            
+            ${meetings.length === 0 ? '<div class="empty"><p>Nenhuma reunião registada</p></div>' : `
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Título</th>
+                      <th>Data</th>
+                      <th>Hora</th>
+                      <th>Local</th>
+                      <th>Estado</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${meetings.map(m => `
+                      <tr>
+                        <td><strong>${escapeHtml(m.title)}</strong></td>
+                        <td>${datePT(m.date)}</td>
+                        <td>${escapeHtml(m.time)}</td>
+                        <td>${escapeHtml(m.place)}</td>
+                        <td><span class="meeting-status ${m.status || 'draft'}">${m.status || 'Rascunho'}</span></td>
+                        <td>
+                          <div class="actions">
+                            ${m.status === 'voting' || m.status === 'closed' ? `
+                              <button class="btn sm" onclick="viewMeetingVoting('${m.id}')">
+                                ${icon('vote')} ${m.status === 'voting' ? 'Votar' : 'Ver Resultados'}
+                              </button>
+                            ` : ''}
+                            <button class="btn sm" onclick="viewMeeting('${m.id}')">${icon('eye')}</button>
+                            ${isAdmin ? `
+                              <button class="btn sm" onclick="openMeetingModal('${m.id}')">${icon('edit')}</button>
+                              ${!m.status || m.status === 'draft' ? `
+                                <button class="btn sm success" onclick="startVoting('${m.id}')">${icon('vote')} Iniciar Votação</button>
+                              ` : ''}
+                              ${m.status === 'voting' ? `
+                                <button class="btn sm danger" onclick="closeVoting('${m.id}')">${icon('check')} Fechar Votação</button>
+                              ` : ''}
+                            ` : ''}
+                          </div>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `}
+          </div>
+        `;
+      },
+      
+      renderSettings() {
+        const s = this.state.settings;
+        const isAdmin = this.currentUser.role === 'admin';
+        
+        return `
+          <div class="grid" style="grid-template-columns: 1fr 1fr;">
+            <div class="card">
+              <h3>Informações do Condomínio</h3>
+              
+              <div class="field">
+                <label>Nome do Condomínio</label>
+                <input id="s_condoName" value="${escapeHtml(s.condoName)}" ${!isAdmin ? 'disabled' : ''} />
+              </div>
+              
+              <div class="field">
+                <label>Morada</label>
+                <input id="s_address" value="${escapeHtml(s.address)}" ${!isAdmin ? 'disabled' : ''} />
+              </div>
+              
+              <div class="subgrid">
+                <div class="field">
+                  <label>NIF</label>
+                  <input id="s_nif" value="${escapeHtml(s.nif)}" ${!isAdmin ? 'disabled' : ''} />
+                </div>
+                <div class="field">
+                  <label>Telefone</label>
+                  <input id="s_phone" value="${escapeHtml(s.phone)}" ${!isAdmin ? 'disabled' : ''} />
+                </div>
+              </div>
+              
+              <div class="field">
+                <label>Email</label>
+                <input type="email" id="s_email" value="${escapeHtml(s.email)}" ${!isAdmin ? 'disabled' : ''} />
+              </div>
+              
+              <div class="field">
+                <label>Logo</label>
+                ${s.logoDataUrl ? `<img src="${s.logoDataUrl}" style="width:100px;height:100px;object-fit:cover;border-radius:12px;margin-bottom:10px;" />` : ''}
+                ${isAdmin ? `
+                  <label for="logo_upload" class="btn sm">
+                    ${icon('upload')} Carregar Logo
+                  </label>
+                  <input type="file" id="logo_upload" accept="image/*" onchange="handleLogoUpload(event)" />
+                ` : ''}
+              </div>
+              
+              <div class="field">
+                <label>Rodapé de Recibos</label>
+                <textarea id="s_receiptFooter" ${!isAdmin ? 'disabled' : ''}>${escapeHtml(s.receiptFooter)}</textarea>
+              </div>
+              
+              ${isAdmin ? `
+                <button class="btn primary" onclick="saveSettings()">
+                  ${icon('check')} Guardar Definições
+                </button>
+              ` : ''}
+            </div>
+            
+            <div>
+              ${isAdmin ? `
+                <div class="card">
+                  <h3>Google Drive Sync</h3>
+                  
+                  ${GDrive.isSignedIn ? `
+                    <div class="gdrive-status">
+                      ${icon('cloud')}
+                      <div>
+                        <strong>Conectado ao Google Drive</strong>
+                        <div class="muted" style="font-size: 12px; margin-top: 2px;">
+                          Backups guardados em: ${GDrive.folderName}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="field">
+                      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" ${GDrive.autoSyncEnabled ? 'checked' : ''} 
+                          onchange="toggleAutoSync(this.checked)" />
+                        <span>Sincronização Automática</span>
+                      </label>
+                      <p class="muted" style="font-size: 12px; margin-top: 4px;">
+                        Guardar automaticamente backups no Google Drive após cada alteração
+                      </p>
+                    </div>
+                    
+                    <button class="btn" onclick="manualGDriveBackup()">
+                      ${icon('cloud')} Guardar Backup Agora
+                    </button>
+                    
+                    <button class="btn" onclick="showGDriveBackups()" style="margin-top: 8px;">
+                      ${icon('download')} Ver Backups no Drive
+                    </button>
+                  ` : `
+                    <p class="muted">Conecta ao Google Drive para guardar backups automaticamente na cloud.</p>
+                    <button class="btn primary" onclick="GDrive.signIn()">
+                      ${icon('cloud')} Conectar ao Google Drive
+                    </button>
+                  `}
+                </div>
+              ` : ''}
+              
+              <div class="card" style="margin-top: 18px;">
+                <h3>Backup & Restore</h3>
+                
+                ${isAdmin ? `
+                  <button class="btn" onclick="exportBackup()">
+                    ${icon('download')} Exportar Backup
+                  </button>
+                  
+                  <label for="import_backup" class="btn" style="margin-top:10px;">
+                    ${icon('upload')} Importar Backup
+                  </label>
+                  <input type="file" id="import_backup" accept=".json" onchange="importBackup(event)" />
+                ` : ''}
+                
+                <div style="margin-top: 16px;">
+                  <h4>Snapshots (${this.snapshots.length})</h4>
+                  <div style="max-height: 300px; overflow-y: auto;">
+                    ${this.snapshots.slice(0, 10).map(s => `
+                      <div style="padding: 10px; border-bottom: 1px solid var(--border); font-size: 13px;">
+                        <div><strong>${escapeHtml(s.label)}</strong></div>
+                        <div class="muted">${datePT(s.when)} ${timePT(s.when)}</div>
+                        ${isAdmin ? `
+                          <div style="margin-top: 6px; display: flex; gap: 6px;">
+                            <button class="btn sm" onclick="exportSnapshot('${s.id}')">
+                              ${icon('download')}
+                            </button>
+                            <button class="btn sm success" onclick="restoreSnapshot('${s.id}')">
+                              ${icon('refresh')} Restaurar
+                            </button>
+                          </div>
+                        ` : ''}
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      },
+      
+      navigate(view) {
+        this.currentView = view;
+        this.render();
+      },
+      
+      async login() {
+        const email = byId('login_email').value.trim();
+        const password = byId('login_password').value.trim();
+        
+        const user = this.state.users.find(u => u.email === email && u.password === password && u.active);
+        
+        if (user) {
+          this.currentUser = user;
+          this.currentView = 'dashboard';
+          this.render();
+          toast(`Bem-vindo, ${user.name}!`);
+        } else {
+          toast('Email ou password incorretos');
+        }
+      },
+      
+      logout() {
+        this.currentUser = null;
+        this.currentView = 'login';
+        this.render();
+        toast('Sessão terminada');
+      },
+      
+      attachEventListeners() {
+        // Event listeners are attached via onclick attributes in HTML
+      }
+    };
+    
+    // ============================================
+    // MODAL FUNCTIONS
+    // ============================================
+    function openModal(title, body, actionLabel, actionHandler) {
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal">
+          <div class="modal-header">
+            <h3>${escapeHtml(title)}</h3>
+            <button class="btn sm" onclick="closeModal()">
+              ${icon('x')}
+            </button>
+          </div>
+          <div class="modal-body">
+            ${body}
+          </div>
+          ${actionLabel ? `
+            <div class="modal-footer">
+              <button class="btn" onclick="closeModal()">Cancelar</button>
+              <button class="btn primary" id="modal_action">${escapeHtml(actionLabel)}</button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      if (actionHandler) {
+        byId('modal_action').onclick = actionHandler;
+      }
+    }
+    
+    function closeModal() {
+      const modal = document.querySelector('.modal-overlay');
+      if (modal) modal.remove();
+    }
+    
+    // ============================================
+    // USER MANAGEMENT
+    // ============================================
+    function openUserModal(id = null) {
+      const u = id ? app.state.users.find(x => x.id === id) : {
+        name: '', email: '', password: '', unit: '', phone: '', nif: '', quota: 0, active: true
+      };
+      
+      openModal(
+        id ? 'Editar Condómino' : 'Novo Condómino',
+        `
+          <div class="field">
+            <label>Nome</label>
+            <input id="u_name" value="${escapeHtml(u.name)}" />
+          </div>
+          
+          <div class="subgrid">
+            <div class="field">
+              <label>Email</label>
+              <input type="email" id="u_email" value="${escapeHtml(u.email)}" />
+            </div>
+            <div class="field">
+              <label>Password</label>
+              <input type="password" id="u_password" value="${escapeHtml(u.password || '')}" placeholder="${id ? '(manter atual)' : ''}" />
+            </div>
+          </div>
+          
+          <div class="subgrid">
+            <div class="field">
+              <label>Fração</label>
+              <input id="u_unit" value="${escapeHtml(u.unit)}" />
+            </div>
+            <div class="field">
+              <label>Quota Mensal (€)</label>
+              <input type="number" step="0.01" id="u_quota" value="${u.quota || 0}" />
+            </div>
+          </div>
+          
+          <div class="subgrid">
+            <div class="field">
+              <label>Telefone</label>
+              <input id="u_phone" value="${escapeHtml(u.phone || '')}" />
+            </div>
+            <div class="field">
+              <label>NIF</label>
+              <input id="u_nif" value="${escapeHtml(u.nif || '')}" />
+            </div>
+          </div>
+          
+          <div class="field">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="u_active" ${u.active ? 'checked' : ''} />
+              <span>Ativo</span>
+            </label>
+          </div>
+        `,
+        'Guardar',
+        async () => {
+          const payload = {
+            name: byId('u_name').value.trim(),
+            email: byId('u_email').value.trim(),
+            unit: byId('u_unit').value.trim(),
+            quota: parseFloat(byId('u_quota').value) || 0,
+            phone: byId('u_phone').value.trim(),
+            nif: byId('u_nif').value.trim(),
+            active: byId('u_active').checked
+          };
+          
+          const newPassword = byId('u_password').value.trim();
+          if (newPassword || !id) {
+            payload.password = newPassword || 'changeme';
+          }
+          
+          if (!payload.name || !payload.email || !payload.unit) {
+            return toast('Preenche nome, email e fração');
+          }
+          
+          if (id) {
+            Object.assign(app.state.users.find(x => x.id === id), payload);
+          } else {
+            app.state.users.push({
+              id: uid(),
+              role: 'user',
+              ...payload
+            });
+          }
+          
+          await saveState(app.state, id ? 'Editou condómino' : 'Criou condómino');
+          closeModal();
+          await app.refresh();
+          toast('Condómino guardado');
+        }
+      );
+    }
+    
+    async function deleteUser(id) {
+      if (!confirm('Eliminar este condómino?')) return;
+      
+      app.state.users = app.state.users.filter(u => u.id !== id);
+      await saveState(app.state, 'Eliminou condómino');
+      await app.refresh();
+      toast('Condómino eliminado');
+    }
+    
+    // ============================================
+    // PAYMENT MANAGEMENT
+    // ============================================
+    function openPaymentModal(id = null) {
+      const p = id ? app.state.payments.find(x => x.id === id) : {
+        userId: '', month: currentDateISO().slice(0, 7), amount: 0, description: 'Quota', status: 'Pendente'
+      };
+      
+      const users = app.state.users.filter(u => u.role === 'user' && u.active);
+      
+      openModal(
+        id ? 'Editar Pagamento' : 'Novo Pagamento',
+        `
+          <div class="field">
+            <label>Condómino</label>
+            <select id="p_userId">
+              <option value="">Selecionar...</option>
+              ${users.map(u => `
+                <option value="${u.id}" ${p.userId === u.id ? 'selected' : ''}>
+                  ${escapeHtml(u.name)} (${escapeHtml(u.unit)})
+                </option>
+              `).join('')}
+            </select>
+          </div>
+          
+          <div class="subgrid">
+            <div class="field">
+              <label>Mês</label>
+              <input type="month" id="p_month" value="${p.month}" />
+            </div>
+            <div class="field">
+              <label>Valor (€)</label>
+              <input type="number" step="0.01" id="p_amount" value="${p.amount}" />
+            </div>
+          </div>
+          
+          <div class="field">
+            <label>Descrição</label>
+            <input id="p_description" value="${escapeHtml(p.description)}" />
+          </div>
+          
+          <div class="field">
+            <label>Estado</label>
+            <select id="p_status">
+              <option value="Pendente" ${p.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
+              <option value="Pago" ${p.status === 'Pago' ? 'selected' : ''}>Pago</option>
+            </select>
+          </div>
+        `,
+        'Guardar',
+        async () => {
+          const payload = {
+            userId: byId('p_userId').value,
+            month: byId('p_month').value,
+            amount: parseFloat(byId('p_amount').value) || 0,
+            description: byId('p_description').value.trim(),
+            status: byId('p_status').value
+          };
+          
+          if (!payload.userId || !payload.month) {
+            return toast('Seleciona condómino e mês');
+          }
+          
+          if (id) {
+            Object.assign(app.state.payments.find(x => x.id === id), payload);
+          } else {
+            app.state.payments.push({
+              id: uid(),
+              createdAt: currentDateISO(),
+              paidAt: payload.status === 'Pago' ? currentDateISO() : null,
+              ...payload
+            });
+          }
+          
+          await saveState(app.state, id ? 'Editou pagamento' : 'Criou pagamento');
+          closeModal();
+          await app.refresh();
+          toast('Pagamento guardado');
+        }
+      );
+    }
+    
+    async function markAsPaid(id) {
+      const payment = app.state.payments.find(p => p.id === id);
+      payment.status = 'Pago';
+      payment.paidAt = currentDateISO();
+      
+      await saveState(app.state, 'Marcou pagamento como pago');
+      await app.refresh();
+      toast('Pagamento marcado como pago');
+    }
+    
+    async function deletePayment(id) {
+      if (!confirm('Eliminar este pagamento?')) return;
+      
+      app.state.payments = app.state.payments.filter(p => p.id !== id);
+      await saveState(app.state, 'Eliminou pagamento');
+      await app.refresh();
+      toast('Pagamento eliminado');
+    }
+    
+    function printReceipt(paymentId) {
+      const p = app.state.payments.find(x => x.id === paymentId);
+      const u = app.state.users.find(x => x.id === p.userId);
+      const s = app.state.settings;
+      
+      const logoBlock = s.logoDataUrl 
+        ? `<img src="${s.logoDataUrl}" alt="Logo" style="width:78px;height:78px;object-fit:cover;border-radius:18px;border:1px solid #dbe3ef">`
+        : `<div style="width:78px;height:78px;border-radius:18px;background:#eff6ff;border:1px solid #dbe3ef;display:grid;place-items:center;color:#1e40af">${icon('building')}</div>`;
+      
+      const w = window.open('', '_blank', 'width=900,height=700');
+      w.document.write(`
+        <html><head><title>Recibo</title>
+        <meta charset="UTF-8">
+        <style>
+          body{font-family:Arial,sans-serif;padding:30px;color:#0f172a;background:#fff}
+          .box{border:2px solid #1e40af;border-radius:22px;padding:26px}
+          h1{color:#1e40af;margin:0 0 10px;font-size:28px;letter-spacing:.04em}
+          table{width:100%;border-collapse:collapse;margin-top:18px}
+          td,th{border:1px solid #dbe3ef;padding:10px;text-align:left}
+          .top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
+          .muted{color:#64748b}
+          .logo-row{display:flex;gap:16px;align-items:flex-start}
+          .footer{margin-top:18px;padding-top:16px;border-top:1px solid #dbe3ef;color:#64748b;font-size:12px;line-height:1.5}
+        </style></head><body>
+          <div class="box">
+            <div class="top">
+              <div class="logo-row">
+                ${logoBlock}
+                <div>
+                  <h1>RECIBO</h1>
+                  <div><strong>${escapeHtml(s.condoName)}</strong></div>
+                  <div class="muted">${escapeHtml(s.address)}</div>
+                  <div class="muted">NIF: ${escapeHtml(s.nif)} • ${escapeHtml(s.email)} • ${escapeHtml(s.phone)}</div>
+                </div>
+              </div>
+              <div>
+                <div><strong>Nº</strong> ${paymentId}</div>
+                <div><strong>Data</strong> ${new Date().toLocaleDateString('pt-PT')}</div>
+              </div>
+            </div>
+            <table>
+              <tr><th>Condómino</th><td>${escapeHtml(u.name)}</td></tr>
+              <tr><th>Fração</th><td>${escapeHtml(u.unit)}</td></tr>
+              <tr><th>Mês</th><td>${monthPT(p.month)}</td></tr>
+              <tr><th>Descrição</th><td>${escapeHtml(p.description || 'Quota')}</td></tr>
+              <tr><th>Valor</th><td>${money(p.amount)}</td></tr>
+              <tr><th>Estado</th><td>${escapeHtml(p.status)}</td></tr>
+              <tr><th>Data de pagamento</th><td>${p.paidAt ? datePT(p.paidAt) : '-'}</td></tr>
+            </table>
+            <div class="footer">${escapeHtml(s.receiptFooter || '')}</div>
+          </div>
+          <script>window.onload = () => window.print();<\/script>
+        </body></html>
+      `);
+      w.document.close();
+    }
+    
+    // ============================================
+    // ISSUE MANAGEMENT
+    // ============================================
+    function openIssueModal(id = null) {
+      const i = id ? app.state.issues.find(x => x.id === id) : {
+        title: '', location: '', priority: 'Média', description: ''
+      };
+      
+      openModal(
+        id ? 'Editar Ocorrência' : 'Nova Ocorrência',
+        `
+          <div class="field">
+            <label>Título</label>
+            <input id="i_title" value="${escapeHtml(i.title)}" />
+          </div>
+          
+          <div class="subgrid">
+            <div class="field">
+              <label>Local</label>
+              <input id="i_location" value="${escapeHtml(i.location)}" />
+            </div>
+            <div class="field">
+              <label>Prioridade</label>
+              <select id="i_priority">
+                <option value="Baixa" ${i.priority === 'Baixa' ? 'selected' : ''}>Baixa</option>
+                <option value="Média" ${i.priority === 'Média' ? 'selected' : ''}>Média</option>
+                <option value="Alta" ${i.priority === 'Alta' ? 'selected' : ''}>Alta</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="field">
+            <label>Descrição</label>
+            <textarea id="i_description">${escapeHtml(i.description)}</textarea>
+          </div>
+        `,
+        'Guardar',
+        async () => {
+          const payload = {
+            title: byId('i_title').value.trim(),
+            location: byId('i_location').value.trim(),
+            priority: byId('i_priority').value,
+            description: byId('i_description').value.trim()
+          };
+          
+          if (!payload.title || !payload.description) {
+            return toast('Preenche título e descrição');
+          }
+          
+          if (id) {
+            Object.assign(app.state.issues.find(x => x.id === id), payload);
+          } else {
+            app.state.issues.push({
+              id: uid(),
+              userId: app.currentUser.id,
+              status: 'Pendente',
+              createdAt: currentDateISO(),
+              response: '',
+              ...payload
+            });
+          }
+          
+          await saveState(app.state, id ? 'Editou ocorrência' : 'Criou ocorrência');
+          closeModal();
+          await app.refresh();
+          toast('Ocorrência guardada');
+        }
+      );
+    }
+    
+    function viewIssue(id) {
+      const i = app.state.issues.find(x => x.id === id);
+      const user = app.state.users.find(u => u.id === i.userId);
+      
+      openModal(
+        escapeHtml(i.title),
+        `
+          <div class="banner">
+            <strong>Condómino:</strong> ${escapeHtml(user?.name || 'N/A')} • 
+            <strong>Local:</strong> ${escapeHtml(i.location)} • 
+            <strong>Data:</strong> ${datePT(i.createdAt)}
+          </div>
+          
+          <div style="margin: 16px 0;">
+            <span class="pill ${i.priority === 'Alta' ? 'danger' : i.priority === 'Média' ? 'warning' : ''}">
+              ${escapeHtml(i.priority)}
+            </span>
+            <span class="pill ${i.status === 'Resolvido' ? 'success' : 'warning'}" style="margin-left: 8px;">
+              ${escapeHtml(i.status)}
+            </span>
+          </div>
+          
+          <h4>Descrição</h4>
+          <p>${escapeHtml(i.description).replace(/\n/g, '<br>')}</p>
+          
+          ${i.response ? `
+            <h4>Resposta</h4>
+            <p>${escapeHtml(i.response).replace(/\n/g, '<br>')}</p>
+          ` : ''}
+        `,
+        null,
+        null
+      );
+    }
+    
+    function editIssue(id) {
+      const i = app.state.issues.find(x => x.id === id);
+      
+      openModal(
+        'Responder à Ocorrência',
+        `
+          <div class="banner">
+            <strong>${escapeHtml(i.title)}</strong>
+          </div>
+          
+          <div class="field">
+            <label>Estado</label>
+            <select id="i_status">
+              <option value="Pendente" ${i.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
+              <option value="Em Análise" ${i.status === 'Em Análise' ? 'selected' : ''}>Em Análise</option>
+              <option value="Resolvido" ${i.status === 'Resolvido' ? 'selected' : ''}>Resolvido</option>
+            </select>
+          </div>
+          
+          <div class="field">
+            <label>Resposta</label>
+            <textarea id="i_response">${escapeHtml(i.response || '')}</textarea>
+          </div>
+        `,
+        'Guardar',
+        async () => {
+          i.status = byId('i_status').value;
+          i.response = byId('i_response').value.trim();
+          
+          await saveState(app.state, 'Atualizou ocorrência');
+          closeModal();
+          await app.refresh();
+          toast('Ocorrência atualizada');
+        }
+      );
+    }
+    
+    // ============================================
+    // MEETING & VOTING MANAGEMENT
+    // ============================================
+    function openMeetingModal(id = null) {
+      const m = id ? app.state.meetings.find(x => x.id === id) : {
+        title: '',
+        date: currentDateISO(),
+        time: '19:00',
+        place: '',
+        agenda: '',
+        agendaItems: [],
+        minutes: '',
+        status: 'draft'
+      };
+      
+      // Ensure agendaItems exists
+      if (!m.agendaItems) {
+        m.agendaItems = [];
+      }
+      
+      openModal(
+        id ? 'Editar Reunião' : 'Nova Reunião',
+        `
+          <div class="field">
+            <label>Título</label>
+            <input id="m_title" value="${escapeHtml(m.title)}" />
+          </div>
+          
+          <div class="subgrid">
+            <div class="field">
+              <label>Data</label>
+              <input id="m_date" type="date" value="${m.date}" />
+            </div>
+            <div class="field">
+              <label>Hora</label>
+              <input id="m_time" type="time" value="${m.time}" />
+            </div>
+          </div>
+          
+          <div class="field">
+            <label>Local</label>
+            <input id="m_place" value="${escapeHtml(m.place)}" />
+          </div>
+          
+          <div class="field">
+            <label>Pontos da Ordem de Trabalhos</label>
+            <div id="agenda_items_container">
+              ${m.agendaItems.map((item, idx) => `
+                <div class="agenda-item" style="display: flex; gap: 10px; align-items: start; margin-bottom: 8px;">
+                  <input type="text" value="${escapeHtml(item.title)}" 
+                    style="flex: 1;" 
+                    placeholder="Título do ponto ${idx + 1}"
+                    data-idx="${idx}" 
+                    class="agenda-item-title" />
+                  <button type="button" class="btn sm danger" onclick="removeAgendaItem(${idx})">
+                    ${icon('trash')}
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+            <button type="button" class="btn sm" onclick="addAgendaItem()">
+              ${icon('plus')} Adicionar Ponto
+            </button>
+          </div>
+          
+          <div class="field">
+            <label>Notas Adicionais</label>
+            <textarea id="m_minutes" placeholder="Informações adicionais sobre a reunião...">${escapeHtml(m.minutes || '')}</textarea>
+          </div>
+        `,
+        'Guardar',
+        async () => {
+          const agendaItemsInputs = document.querySelectorAll('.agenda-item-title');
+          const agendaItems = Array.from(agendaItemsInputs)
+            .map(input => input.value.trim())
+            .filter(title => title.length > 0)
+            .map((title, index) => ({
+              id: m.agendaItems[index]?.id || uid(),
+              title: title,
+              description: m.agendaItems[index]?.description || '',
+              votes: m.agendaItems[index]?.votes || {}
+            }));
+          
+          const payload = {
+            title: byId('m_title').value.trim(),
+            date: byId('m_date').value,
+            time: byId('m_time').value,
+            place: byId('m_place').value.trim(),
+            agendaItems: agendaItems,
+            minutes: byId('m_minutes').value.trim(),
+            status: m.status || 'draft'
+          };
+          
+          if (!payload.title || !payload.date) {
+            return toast('Preenche título e data');
+          }
+          
+          if (id) {
+            Object.assign(app.state.meetings.find(x => x.id === id), payload);
+          } else {
+            app.state.meetings.push({
+              id: uid(),
+              ...payload
+            });
+          }
+          
+          await saveState(app.state, id ? 'Editou reunião' : 'Criou reunião');
+          closeModal();
+          await app.refresh();
+          toast('Reunião guardada');
+        }
+      );
+    }
+    
+    function addAgendaItem() {
+      const container = document.getElementById('agenda_items_container');
+      const idx = container.children.length;
+      
+      const div = document.createElement('div');
+      div.className = 'agenda-item';
+      div.style.cssText = 'display: flex; gap: 10px; align-items: start; margin-bottom: 8px;';
+      div.innerHTML = `
+        <input type="text" 
+          style="flex: 1;" 
+          placeholder="Título do ponto ${idx + 1}"
+          data-idx="${idx}" 
+          class="agenda-item-title" />
+        <button type="button" class="btn sm danger" onclick="removeAgendaItem(${idx})">
+          ${icon('trash')}
+        </button>
+      `;
+      
+      container.appendChild(div);
+    }
+    
+    function removeAgendaItem(idx) {
+      const container = document.getElementById('agenda_items_container');
+      const items = container.children;
+      
+      if (items[idx]) {
+        items[idx].remove();
+      }
+      
+      // Reindex remaining items
+      Array.from(container.children).forEach((item, newIdx) => {
+        const input = item.querySelector('.agenda-item-title');
+        const button = item.querySelector('button');
+        
+        input.setAttribute('data-idx', newIdx);
+        input.placeholder = `Título do ponto ${newIdx + 1}`;
+        button.setAttribute('onclick', `removeAgendaItem(${newIdx})`);
+      });
+    }
+    
+    async function startVoting(id) {
+      const meeting = app.state.meetings.find(m => m.id === id);
+      
+      if (!meeting.agendaItems || meeting.agendaItems.length === 0) {
+        return toast('Adiciona pontos à ordem de trabalhos antes de iniciar a votação');
+      }
+      
+      if (!confirm('Iniciar votação para esta reunião? Os condóminos poderão votar nos pontos da ordem de trabalhos.')) {
+        return;
+      }
+      
+      meeting.status = 'voting';
+      meeting.votingStartedAt = new Date().toISOString();
+      
+      // Initialize votes object for each agenda item if not exists
+      meeting.agendaItems.forEach(item => {
+        if (!item.votes) {
+          item.votes = {};
+        }
+      });
+      
+      await saveState(app.state, 'Iniciou votação');
+      await app.refresh();
+      toast('Votação iniciada');
+    }
+    
+    async function closeVoting(id) {
+      if (!confirm('Fechar votação? Os condóminos não poderão mais votar.')) {
+        return;
+      }
+      
+      const meeting = app.state.meetings.find(m => m.id === id);
+      meeting.status = 'closed';
+      meeting.votingClosedAt = new Date().toISOString();
+      
+      // Generate final minutes with voting results
+      meeting.minutes = generateFinalMinutes(meeting);
+      
+      await saveState(app.state, 'Fechou votação');
+      await app.refresh();
+      toast('Votação fechada');
+    }
+    
+    function generateFinalMinutes(meeting) {
+      const activeUsers = app.state.users.filter(u => u.role === 'user' && u.active);
+      const totalVoters = activeUsers.length;
+      const quorum = Math.ceil(totalVoters / 2);
+      
+      let minutes = `ATA DA REUNIÃO\n`;
+      minutes += `${meeting.title}\n`;
+      minutes += `Data: ${datePT(meeting.date)} às ${meeting.time}\n`;
+      minutes += `Local: ${meeting.place}\n\n`;
+      
+      minutes += `ORDEM DE TRABALHOS E VOTAÇÕES\n\n`;
+      
+      meeting.agendaItems.forEach((item, index) => {
+        const votes = item.votes || {};
+        const favor = Object.values(votes).filter(v => v === 'favor').length;
+        const against = Object.values(votes).filter(v => v === 'against').length;
+        const abstain = Object.values(votes).filter(v => v === 'abstain').length;
+        const totalVotes = favor + against + abstain;
+        
+        minutes += `${index + 1}. ${item.title}\n`;
+        minutes += `   Votos a favor: ${favor}\n`;
+        minutes += `   Votos contra: ${against}\n`;
+        minutes += `   Abstenções: ${abstain}\n`;
+        minutes += `   Total de votantes: ${totalVotes} / ${totalVoters}\n`;
+        minutes += `   Quórum atingido: ${totalVotes >= quorum ? 'Sim' : 'Não'}\n`;
+        minutes += `   Resultado: ${favor > against ? 'APROVADO' : (favor === against ? 'EMPATE' : 'REJEITADO')}\n\n`;
+      });
+      
+      minutes += `\nAta redigida automaticamente pelo sistema CondoPro.`;
+      
+      return minutes;
+    }
+    
+    function viewMeetingVoting(id) {
+      const meeting = app.state.meetings.find(m => m.id === id);
+      const activeUsers = app.state.users.filter(u => u.role === 'user' && u.active);
+      const totalVoters = activeUsers.length;
+      const quorum = Math.ceil(totalVoters / 2);
+      
+      const isVoting = meeting.status === 'voting';
+      const canVote = isVoting && app.currentUser.role === 'user';
+      
+      const agendaItemsHtml = meeting.agendaItems.map(item => {
+        const votes = item.votes || {};
+        const favor = Object.values(votes).filter(v => v === 'favor').length;
+        const against = Object.values(votes).filter(v => v === 'against').length;
+        const abstain = Object.values(votes).filter(v => v === 'abstain').length;
+        const totalVotes = favor + against + abstain;
+        
+        const userVote = votes[app.currentUser.id];
+        
+        const favorPercent = totalVotes > 0 ? (favor / totalVotes * 100).toFixed(1) : 0;
+        const againstPercent = totalVotes > 0 ? (against / totalVotes * 100).toFixed(1) : 0;
+        const abstainPercent = totalVotes > 0 ? (abstain / totalVotes * 100).toFixed(1) : 0;
+        
+        return `
+          <div class="agenda-item">
+            <h4>${escapeHtml(item.title)}</h4>
+            
+            ${canVote ? `
+              <div class="vote-controls">
+                <button class="vote-btn favor ${userVote === 'favor' ? 'selected' : ''}" 
+                  onclick="castVote('${meeting.id}', '${item.id}', 'favor')">
+                  ${icon('check')} A Favor
+                </button>
+                <button class="vote-btn against ${userVote === 'against' ? 'selected' : ''}" 
+                  onclick="castVote('${meeting.id}', '${item.id}', 'against')">
+                  ${icon('x')} Contra
+                </button>
+                <button class="vote-btn abstain ${userVote === 'abstain' ? 'selected' : ''}" 
+                  onclick="castVote('${meeting.id}', '${item.id}', 'abstain')">
+                  Abstenção
+                </button>
+              </div>
+            ` : ''}
+            
+            <div class="vote-result">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <strong>Resultados</strong>
+                <span>${totalVotes} / ${totalVoters} votos</span>
+              </div>
+              
+              <div class="vote-bar">
+                <div class="vote-bar-segment favor" style="width: ${favorPercent}%"></div>
+                <div class="vote-bar-segment against" style="width: ${againstPercent}%"></div>
+                <div class="vote-bar-segment abstain" style="width: ${abstainPercent}%"></div>
+              </div>
+              
+              <div class="vote-stats">
+                <span>
+                  <div class="vote-dot favor"></div>
+                  A Favor: ${favor} (${favorPercent}%)
+                </span>
+                <span>
+                  <div class="vote-dot against"></div>
+                  Contra: ${against} (${againstPercent}%)
+                </span>
+                <span>
+                  <div class="vote-dot abstain"></div>
+                  Abstenção: ${abstain} (${abstainPercent}%)
+                </span>
+              </div>
+              
+              <div class="quorum-status ${totalVotes >= quorum ? 'reached' : 'not-reached'}">
+                ${totalVotes >= quorum ? icon('check') : icon('alert')}
+                Quórum ${totalVotes >= quorum ? 'atingido' : 'não atingido'} (${quorum} votos necessários)
+              </div>
+              
+              ${!isVoting ? `
+                <div style="margin-top: 10px; font-weight: 700; color: ${favor > against ? 'var(--success)' : (favor === against ? 'var(--warning)' : 'var(--danger)')}">
+                  Resultado: ${favor > against ? 'APROVADO' : (favor === against ? 'EMPATE' : 'REJEITADO')}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      openModal(
+        `${escapeHtml(meeting.title)} - ${isVoting ? 'Votação em Curso' : 'Resultados'}`,
+        `
+          <div class="banner">
+            ${datePT(meeting.date)} às ${escapeHtml(meeting.time)} • ${escapeHtml(meeting.place)}
+            <div style="margin-top: 6px;">
+              <span class="meeting-status ${meeting.status}">${meeting.status === 'voting' ? 'Votação em Curso' : 'Votação Encerrada'}</span>
+            </div>
+          </div>
+          
+          ${isVoting && canVote ? `
+            <div style="background: var(--bg-alt); padding: 12px; border-radius: 10px; margin: 16px 0;">
+              <strong>Vote em cada ponto da ordem de trabalhos abaixo:</strong>
+            </div>
+          ` : ''}
+          
+          ${agendaItemsHtml}
+          
+          ${!isVoting && meeting.minutes ? `
+            <div style="margin-top: 20px;">
+              <h4>Ata Final</h4>
+              <div style="background: var(--bg-alt); padding: 16px; border-radius: 10px; white-space: pre-line; font-size: 13px;">
+                ${escapeHtml(meeting.minutes)}
+              </div>
+            </div>
+          ` : ''}
+        `,
+        null,
+        null
+      );
+    }
+    
+    async function castVote(meetingId, itemId, vote) {
+      const meeting = app.state.meetings.find(m => m.id === meetingId);
+      const item = meeting.agendaItems.find(i => i.id === itemId);
+      
+      if (!item.votes) {
+        item.votes = {};
+      }
+      
+      item.votes[app.currentUser.id] = vote;
+      
+      await saveState(app.state, `Votou em reunião`);
+      
+      // Refresh the modal
+      closeModal();
+      viewMeetingVoting(meetingId);
+      
+      toast('Voto registado');
+    }
+    
+    function viewMeeting(id) {
+      const m = app.state.meetings.find(x => x.id === id);
+      
+      const agendaText = m.agendaItems && m.agendaItems.length > 0
+        ? m.agendaItems.map((item, idx) => `${idx + 1}. ${item.title}`).join('\n')
+        : (m.agenda || 'Nenhum ponto definido');
+      
+      openModal(
+        escapeHtml(m.title),
+        `
+          <div class="banner">
+            ${datePT(m.date)} às ${escapeHtml(m.time)} • ${escapeHtml(m.place)}
+          </div>
+          
+          <h4>Ordem de Trabalhos</h4>
+          <p style="white-space: pre-line;">${escapeHtml(agendaText)}</p>
+          
+          ${m.minutes ? `
+            <h4>Notas / Ata</h4>
+            <p style="white-space: pre-line;">${escapeHtml(m.minutes)}</p>
+          ` : ''}
+        `,
+        null,
+        null
+      );
+    }
+    
+    // ============================================
+    // SETTINGS
+    // ============================================
+    async function saveSettings() {
+      app.state.settings.condoName = byId('s_condoName').value.trim();
+      app.state.settings.address = byId('s_address').value.trim();
+      app.state.settings.nif = byId('s_nif').value.trim();
+      app.state.settings.phone = byId('s_phone').value.trim();
+      app.state.settings.email = byId('s_email').value.trim();
+      app.state.settings.receiptFooter = byId('s_receiptFooter').value.trim();
+      
+      await saveState(app.state, 'Atualizou definições');
+      await app.refresh();
+      toast('Definições guardadas');
+    }
+    
+    async function handleLogoUpload(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      
+      if (!file.type.startsWith('image/')) {
+        return toast('Escolhe uma imagem válida');
+      }
+      
+      const reader = new FileReader();
+      reader.onload = async () => {
+        app.state.settings.logoDataUrl = reader.result;
+        await saveState(app.state, 'Atualizou logo');
+        await app.refresh();
+        toast('Logo guardado');
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    }
+    
+    // ============================================
+    // BACKUP & GOOGLE DRIVE
+    // ============================================
+    async function exportBackup() {
+      if (!app.currentUser || app.currentUser.role !== 'admin') {
+        return toast('Só a Administração pode exportar backups');
+      }
+      
+      const data = await getState();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `condopro_backup_${currentDateISO()}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast('Backup exportado');
+    }
+    
+    async function importBackup(e) {
+      if (!app.currentUser || app.currentUser.role !== 'admin') {
+        toast('Só a Administração pode importar backups');
+        e.target.value = '';
+        return;
+      }
+      
+      const file = e.target.files?.[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const data = normalizeState(JSON.parse(reader.result));
+          if (!data.users || !data.payments) throw new Error('Formato inválido');
+          
+          await DB.write(data, 'state', 'main');
+          await createSnapshot(data, 'Importação de backup');
+          
+          app.state = await getState();
+          app.snapshots = await getSnapshots();
+          
+          const refreshed = app.state.users.find(u => app.currentUser && u.id === app.currentUser.id && u.active);
+          app.currentUser = refreshed || null;
+          
+          toast('Backup importado');
+          app.render();
+        } catch {
+          toast('Não foi possível importar o ficheiro');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    }
+    
+    async function exportSnapshot(snapshotId) {
+      if (!app.currentUser || app.currentUser.role !== 'admin') {
+        return toast('Só a Administração pode exportar snapshots');
+      }
+      
+      const snap = app.snapshots.find(s => s.id === snapshotId);
+      if (!snap) return toast('Snapshot não encontrada');
+      
+      const blob = new Blob([JSON.stringify(snap.state, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `condopro_snapshot_${String(snap.when).slice(0,19).replace(/[:T]/g,'-')}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast('Snapshot exportada');
+    }
+    
+    async function restoreSnapshot(snapshotId) {
+      if (!app.currentUser || app.currentUser.role !== 'admin') {
+        return toast('Só a Administração pode restaurar snapshots');
+      }
+      
+      const snap = app.snapshots.find(s => s.id === snapshotId);
+      if (!snap) return toast('Snapshot não encontrada');
+      
+      if (!confirm('Restaurar esta snapshot e substituir o estado atual?')) return;
+      
+      const data = normalizeState(snap.state);
+      await DB.write(data, 'state', 'main');
+      await createSnapshot(data, `Restauro: ${snap.label || 'Snapshot'}`);
+      await app.refresh();
+      toast('Snapshot restaurada');
+    }
+    
+    function toggleAutoSync(enabled) {
+      GDrive.autoSyncEnabled = enabled;
+      toast(enabled ? 'Auto-sincronização ativada' : 'Auto-sincronização desativada');
+    }
+    
+    async function manualGDriveBackup() {
+      if (!GDrive.isSignedIn) {
+        return toast('Conecta-te ao Google Drive primeiro');
+      }
+      
+      const filename = `manual_backup_${currentDateISO()}_${Date.now()}.json`;
+      const success = await GDrive.uploadBackup(app.state, filename);
+      
+      if (success) {
+        await app.refresh();
+      }
+    }
+    
+    async function showGDriveBackups() {
+      const backups = await GDrive.listBackups();
+      
+      if (backups.length === 0) {
+        return toast('Nenhum backup encontrado no Google Drive');
+      }
+      
+      const backupsList = backups.map(b => `
+        <div style="padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <strong>${escapeHtml(b.name)}</strong>
+            <div class="muted" style="font-size: 12px; margin-top: 4px;">
+              ${new Date(b.modifiedTime).toLocaleString('pt-PT')}
+            </div>
+          </div>
+          <button class="btn sm success" onclick="restoreFromGDrive('${b.id}')">
+            ${icon('download')} Restaurar
+          </button>
+        </div>
+      `).join('');
+      
+      openModal(
+        'Backups no Google Drive',
+        `
+          <div style="max-height: 400px; overflow-y: auto;">
+            ${backupsList}
+          </div>
+        `,
+        null,
+        null
+      );
+    }
+    
+    async function restoreFromGDrive(fileId) {
+      if (!confirm('Restaurar este backup do Google Drive? O estado atual será substituído.')) {
+        return;
+      }
+      
+      const data = await GDrive.downloadBackup(fileId);
+      
+      if (!data) {
+        return toast('Erro ao descarregar backup');
+      }
+      
+      try {
+        const normalized = normalizeState(data);
+        await DB.write(normalized, 'state', 'main');
+        await createSnapshot(normalized, 'Restauração do Google Drive');
+        
+        app.state = await getState();
+        app.snapshots = await getSnapshots();
+        
+        closeModal();
+        await app.refresh();
+        toast('Backup restaurado do Google Drive');
+      } catch (error) {
+        console.error('Restore error:', error);
+        toast('Erro ao restaurar backup');
+      }
+    }
+    
+    // ============================================
+    // INITIALIZE APP
+    // ============================================
+    app.init();
   </script>
 </body>
 </html>
