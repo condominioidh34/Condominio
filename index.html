@@ -676,6 +676,29 @@
           req.onsuccess = () => resolve();
           req.onerror = () => reject(req.error);
         });
+      },
+      async clear() {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          try {
+            const stores = ['state', 'snapshots'];
+            let completed = 0;
+            
+            stores.forEach(storeName => {
+              const tx = db.transaction(storeName, 'readwrite');
+              const req = tx.objectStore(storeName).clear();
+              req.onsuccess = () => {
+                completed++;
+                if (completed === stores.length) {
+                  resolve();
+                }
+              };
+              req.onerror = () => reject(req.error);
+            });
+          } catch (error) {
+            reject(error);
+          }
+        });
       }
     };
     
@@ -980,17 +1003,43 @@
     }
     
     async function getState() {
+      // PRIORIDADE 1: Tentar carregar do Google Drive (fonte primária)
+      if (GDrive.isSignedIn) {
+        try {
+          const driveData = await GDrive.loadLatestBackup();
+          if (driveData) {
+            console.log('✅ Dados carregados do Google Drive');
+            // Guardar em cache local
+            await DB.write(driveData, 'state', 'main');
+            return normalizeState(driveData);
+          }
+        } catch (error) {
+          console.warn('⚠️ Erro ao carregar do Drive, usando cache local:', error);
+        }
+      }
+      
+      // PRIORIDADE 2: Usar cache local (fallback)
       const raw = await DB.read('state', 'main');
       return normalizeState(raw || {});
     }
     
     async function saveState(state, label = '') {
+      // Guardar localmente (cache)
       await DB.write(state, 'state', 'main');
       await createSnapshot(state, label);
       
-      // Auto-sync to Google Drive if enabled
-      if (GDrive.autoSyncEnabled && GDrive.isSignedIn) {
-        await GDrive.autoSync(state);
+      // SEMPRE salvar no Google Drive se estiver conectado (fonte primária)
+      if (GDrive.isSignedIn) {
+        try {
+          const filename = `condopro_data_${currentDateISO()}_${Date.now()}.json`;
+          await GDrive.uploadBackup(state, filename);
+          console.log('✅ Dados guardados no Google Drive');
+        } catch (error) {
+          console.error('❌ Erro ao guardar no Google Drive:', error);
+          toast('⚠️ Erro ao sincronizar com Google Drive');
+        }
+      } else {
+        console.warn('⚠️ Google Drive não conectado - dados apenas em cache local');
       }
     }
     
@@ -1021,20 +1070,24 @@
       dashboardUserId: 'all', // 'all' ou userId específico
       
       async init() {
-        // Initialize Google Drive
+        // Inicializar Google Drive API
         await GDrive.init();
         
+        // Verificar se está conectado ao Drive
+        if (!GDrive.isSignedIn) {
+          // Mostrar tela de conexão obrigatória
+          this.currentView = 'connect-drive';
+          this.render();
+          return;
+        }
+        
+        // Carregar dados do Google Drive (fonte primária)
         this.state = await getState();
         this.snapshots = await getSnapshots();
         
-        // Auto-login if only one admin exists (development mode)
-        if (this.state.users.length === 1 && this.state.users[0].role === 'admin') {
-          this.currentUser = this.state.users[0];
-          this.currentView = 'dashboard';
-        }
-        
-        // Create default admin if no users exist
+        // Se não há dados no Drive, criar estrutura inicial
         if (this.state.users.length === 0) {
+          console.log('📦 Primeira utilização - Criando estrutura inicial...');
           this.state.users.push({
             id: uid(),
             name: 'Administrador',
@@ -1046,9 +1099,12 @@
             phone: '',
             nif: '',
             quota: 0,
-            permilagem: 0 // Admin não tem permilagem de voto
+            permilagem: 0
           });
-          await saveState(this.state, 'Criação de utilizador admin inicial');
+          
+          // Salvar no Google Drive
+          await saveState(this.state, 'Criação inicial da base de dados');
+          console.log('✅ Estrutura inicial criada e guardada no Google Drive');
         }
         
         this.render();
@@ -1069,13 +1125,71 @@
         const root = byId('app');
         if (!root) return;
         
-        if (!this.currentUser) {
+        if (this.currentView === 'connect-drive') {
+          root.innerHTML = this.renderConnectDrive();
+        } else if (!this.currentUser) {
           root.innerHTML = this.renderLogin();
         } else {
           root.innerHTML = this.renderApp();
         }
         
         this.attachEventListeners();
+      },
+      
+      renderConnectDrive() {
+        return `
+          <div class="login-container">
+            <div class="login-card">
+              <div class="logo">
+                ${icon('building')}
+                <h1>CondoPro</h1>
+                <p>Gestão de Condomínios</p>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <div style="font-size: 64px; margin-bottom: 20px;">
+                  ${icon('cloud')}
+                </div>
+                <h2 style="margin-bottom: 12px;">Conexão Necessária</h2>
+                <p style="color: var(--muted); margin-bottom: 24px;">
+                  O CondoPro utiliza o Google Drive como base de dados principal.<br/>
+                  Conecta-te para aceder aos teus dados de qualquer dispositivo.
+                </p>
+                
+                <div style="background: var(--bg-alt); padding: 20px; border-radius: 12px; margin: 20px 0; text-align: left;">
+                  <h4 style="margin-bottom: 12px;">✨ Vantagens:</h4>
+                  <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                    <li>Dados sincronizados em todos os dispositivos</li>
+                    <li>Backups automáticos na cloud</li>
+                    <li>Acesso de qualquer lugar</li>
+                    <li>100% seguro e privado</li>
+                  </ul>
+                </div>
+                
+                <button class="btn primary" onclick="app.connectDrive()" style="width: 100%; padding: 14px; font-size: 16px;">
+                  ${icon('cloud')} Conectar ao Google Drive
+                </button>
+                
+                <p style="font-size: 12px; color: var(--muted); margin-top: 16px;">
+                  Os teus dados são guardados na tua conta Google Drive pessoal.<br/>
+                  Ninguém mais tem acesso.
+                </p>
+              </div>
+            </div>
+          </div>
+        `;
+      },
+      
+      async connectDrive() {
+        try {
+          await GDrive.signIn();
+          // Após conectar, reinicializar app
+          await this.init();
+          toast('✅ Conectado ao Google Drive!');
+        } catch (error) {
+          console.error('Erro ao conectar:', error);
+          toast('❌ Erro ao conectar ao Google Drive');
+        }
       },
       
       renderLogin() {
@@ -1894,7 +2008,7 @@
             <div>
               ${isAdmin ? `
                 <div class="card">
-                  <h3>Google Drive Sync</h3>
+                  <h3>Google Drive - Base de Dados</h3>
                   
                   ${GDrive.isSignedIn ? `
                     <div class="gdrive-status">
@@ -1902,31 +2016,40 @@
                       <div>
                         <strong>Conectado ao Google Drive</strong>
                         <div class="muted" style="font-size: 12px; margin-top: 2px;">
-                          Backups guardados em: ${GDrive.folderName}
+                          ✅ Dados guardados em: ${GDrive.folderName}
                         </div>
                       </div>
                     </div>
                     
-                    <div class="field">
-                      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" ${GDrive.autoSyncEnabled ? 'checked' : ''} 
-                          onchange="toggleAutoSync(this.checked)" />
-                        <span>Sincronização Automática</span>
-                      </label>
-                      <p class="muted" style="font-size: 12px; margin-top: 4px;">
-                        Guardar automaticamente backups no Google Drive após cada alteração
+                    <div style="background: #dbeafe; padding: 12px; border-radius: 8px; margin: 16px 0; font-size: 13px;">
+                      <strong style="color: #1e40af;">ℹ️ Importante:</strong>
+                      <p style="color: #1e3a8a; margin-top: 6px;">
+                        O Google Drive é a <strong>base de dados principal</strong> do CondoPro. 
+                        Todos os dados são guardados e carregados de lá. Podes aceder de qualquer dispositivo!
                       </p>
                     </div>
                     
                     <button class="btn" onclick="manualGDriveBackup()">
-                      ${icon('cloud')} Guardar Backup Agora
+                      ${icon('cloud')} Criar Backup Manual
                     </button>
                     
                     <button class="btn" onclick="showGDriveBackups()" style="margin-top: 8px;">
-                      ${icon('download')} Ver Backups no Drive
+                      ${icon('download')} Ver Todos os Backups
                     </button>
+                    
+                    <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                      <button class="btn danger" onclick="switchGoogleAccount()">
+                        ${icon('refresh')} Trocar Conta Google
+                      </button>
+                      <p class="muted" style="font-size: 12px; margin-top: 8px;">
+                        Desconecta e permite entrar com outra conta Google
+                      </p>
+                    </div>
                   ` : `
-                    <p class="muted">Conecta ao Google Drive para guardar backups automaticamente na cloud.</p>
+                    <p class="muted">⚠️ Precisas conectar ao Google Drive para usar o CondoPro.</p>
+                    <p class="muted" style="font-size: 12px; margin-top: 8px;">
+                      O Google Drive é a base de dados principal da aplicação.
+                    </p>
                     <button class="btn primary" onclick="GDrive.signIn()">
                       ${icon('cloud')} Conectar ao Google Drive
                     </button>
@@ -4422,6 +4545,33 @@ ${settings.email}`;
         null,
         null
       );
+    }
+    
+    async function switchGoogleAccount() {
+      if (!confirm('⚠️ ATENÇÃO!\n\nIsto vai desconectar do Google Drive e limpar dados locais.\n\nTens a certeza? Os dados no Google Drive não serão apagados.')) {
+        return;
+      }
+      
+      try {
+        // Desconectar do Google Drive
+        await GDrive.signOut();
+        
+        // Limpar dados locais (cache)
+        await DB.clear();
+        
+        // Limpar estado da aplicação
+        app.currentUser = null;
+        app.state = null;
+        app.snapshots = [];
+        
+        toast('✅ Desconectado! Podes entrar com outra conta.');
+        
+        // Reiniciar aplicação (vai mostrar tela de conexão)
+        await app.init();
+      } catch (error) {
+        console.error('Erro ao trocar conta:', error);
+        toast('❌ Erro ao desconectar');
+      }
     }
     
     async function restoreFromGDrive(fileId) {
