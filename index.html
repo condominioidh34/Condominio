@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CondoPro - Gestão de Condomínios</title>
+  <title>Gestão de Condomínios</title>
   <style>
     :root {
       --primary: #1e40af;
@@ -1077,8 +1077,26 @@
         this.state = await getState();
         this.snapshots = await getSnapshots();
         
-        // Não criar admin automático - será criado pelo utilizador na primeira vez
-        // Isto é mais seguro - o utilizador define suas próprias credenciais
+        // Se não há dados, criar estrutura inicial
+        if (this.state.users.length === 0) {
+          console.log('📦 Primeira utilização - Criando estrutura inicial...');
+          this.state.users.push({
+            id: uid(),
+            name: 'Administrador',
+            email: 'admin@condopro.pt',
+            password: 'admin123',
+            role: 'admin',
+            unit: 'Administração',
+            active: true,
+            phone: '',
+            nif: '',
+            quota: 0,
+            permilagem: 0
+          });
+          
+          await saveState(this.state, 'Criação inicial da base de dados');
+          console.log('✅ Estrutura inicial criada');
+        }
         
         this.render();
       },
@@ -1108,67 +1126,6 @@
       },
       
       renderLogin() {
-        const hasUsers = this.state && this.state.users && this.state.users.length > 0;
-        
-        // Se não há utilizadores, mostrar tela de criação inicial
-        if (!hasUsers) {
-          return `
-            <div style="min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);">
-              <div class="card" style="width:100%;max-width:480px;margin:20px;">
-                <div style="text-align:center;margin-bottom:24px;">
-                  <div style="width:80px;height:80px;margin:0 auto 16px;background:var(--bg-alt);border-radius:20px;display:grid;place-items:center;color:var(--primary);">
-                    <svg style="width:40px;height:40px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                  </div>
-                  <h2 style="margin:0 0 6px;">Bem-vindo ao CondoPro</h2>
-                  <p class="muted">Primeira Utilização</p>
-                </div>
-                
-                <div style="background:rgba(59,130,246,0.1);padding:16px;border-radius:12px;border:1px solid rgba(59,130,246,0.3);margin-bottom:24px;">
-                  <h4 style="margin:0 0 8px 0;color:#1e40af;">🎉 Configuração Inicial</h4>
-                  <p style="margin:0;font-size:14px;line-height:1.6;color:var(--text);">
-                    Vamos criar o primeiro administrador.<br/>
-                    Define as tuas credenciais de acesso.
-                  </p>
-                </div>
-                
-                ${!GDrive.isSignedIn ? `
-                  <div style="background:rgba(245,158,11,0.1);padding:14px;border-radius:10px;border:1px solid rgba(245,158,11,0.3);margin-bottom:20px;">
-                    <div style="display:flex;gap:10px;align-items:start;">
-                      <div style="font-size:20px;">💡</div>
-                      <div style="flex:1;font-size:13px;line-height:1.5;">
-                        <strong style="color:#92400e;">Tens dados noutro dispositivo?</strong><br/>
-                        Clica "Conectar ao Google Drive" primeiro para carregar os dados.
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <button class="btn" style="width:100%;background:rgba(66,133,244,0.1);color:#4285f4;border:1px solid rgba(66,133,244,0.3);font-weight:600;margin-bottom:16px;" onclick="connectAndLoadFromDrive()">
-                    <svg style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
-                    Conectar ao Google Drive
-                  </button>
-                  
-                  <div style="position:relative;margin:20px 0;">
-                    <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:var(--border);"></div>
-                    <div style="position:relative;text-align:center;">
-                      <span style="background:white;padding:0 12px;color:var(--muted);font-size:13px;font-weight:600;">OU</span>
-                    </div>
-                  </div>
-                ` : ''}
-                
-                <button class="btn primary" style="width:100%;font-size:16px;padding:14px;" onclick="showCreateFirstAdminModal()">
-                  <svg style="width:20px;height:20px;display:inline-block;vertical-align:middle;margin-right:8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-                  Criar Primeiro Administrador
-                </button>
-                
-                <p class="muted" style="text-align:center;margin-top:20px;font-size:12px;">
-                  Após criar, poderás adicionar condóminos e outros administradores
-                </p>
-              </div>
-            </div>
-          `;
-        }
-        
-        // Login normal quando já há utilizadores
         return `
           <div style="min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);">
             <div class="card" style="width:100%;max-width:420px;margin:20px;">
@@ -1182,12 +1139,12 @@
               
               <div class="field">
                 <label>Email</label>
-                <input type="email" id="login_email" placeholder="seu@email.com" value="" />
+                <input type="email" id="login_email" placeholder="admin@condopro.pt" value="admin@condopro.pt" />
               </div>
               
               <div class="field">
                 <label>Password</label>
-                <input type="password" id="login_password" placeholder="••••••••" value="" />
+                <input type="password" id="login_password" placeholder="••••••••" value="admin123" />
               </div>
               
               <button class="btn primary" style="width:100%;margin-top:8px;" onclick="app.login()">
@@ -1220,6 +1177,11 @@
                   </p>
                 </div>
               `}
+              
+              <p class="muted" style="text-align:center;margin-top:24px;font-size:13px;">
+                Primeiro acesso? Use:<br/>
+                <strong style="color:rgba(255,255,255,0.9);">admin@condopro.pt</strong> / <strong style="color:rgba(255,255,255,0.9);">admin123</strong>
+              </p>
               
               <div style="margin-top:16px;text-align:center;font-size:12px;color:rgba(255,255,255,0.6);">
                 <svg style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
@@ -4624,126 +4586,23 @@ ${settings.email}`;
           await DB.write(normalized, 'state', 'main');
           await createSnapshot(normalized, 'Dados carregados do Google Drive');
           
-          // IMPORTANTE: Recarregar COMPLETAMENTE o estado da app
-          await app.refresh();
+          // Atualizar estado da app
+          app.state = normalized;
+          app.snapshots = await getSnapshots();
           
-          toast('✅ Dados carregados! Podes fazer login agora.', 5000);
+          toast('✅ Dados carregados do Google Drive!');
           console.log('✅ Dados sincronizados do Drive:', normalized.users.length, 'utilizadores');
-          
-          // Mostrar alerta adicional
-          setTimeout(() => {
-            alert('✅ Dados carregados do Google Drive!\n\n' + 
-                  normalized.users.length + ' utilizador(es) encontrado(s).\n\n' +
-                  'Podes fazer login agora com as tuas credenciais.');
-          }, 500);
         } else {
           // Sem dados no Drive
-          toast('ℹ️ Sem dados no Google Drive. Usa dados locais.', 5000);
-          alert('ℹ️ Não foram encontrados dados no Google Drive.\n\n' +
-                'Se é a primeira vez, faz login normalmente.\n' +
-                'Os dados serão guardados localmente.');
-          
-          // Refresh mesmo assim para mostrar interface atualizada
-          await app.refresh();
+          toast('ℹ️ Sem dados no Google Drive. Usa dados locais ou cria novos.');
         }
+        
+        // Atualizar interface
+        app.render();
       } catch (error) {
         console.error('Erro ao conectar e carregar:', error);
         toast('❌ Erro: ' + (error.message || 'Não foi possível conectar'));
-        alert('❌ Erro ao conectar ao Google Drive:\n\n' + 
-              (error.message || 'Tenta novamente ou contacta o suporte.'));
       }
-    }
-    
-    function showCreateFirstAdminModal() {
-      openModal(
-        '👤 Criar Primeiro Administrador',
-        `
-          <div class="field">
-            <label>Nome Completo *</label>
-            <input id="new_admin_name" placeholder="Ex: João Silva" autofocus />
-          </div>
-          
-          <div class="field">
-            <label>Email *</label>
-            <input type="email" id="new_admin_email" placeholder="joao@email.com" />
-          </div>
-          
-          <div class="field">
-            <label>Password *</label>
-            <input type="password" id="new_admin_password" placeholder="Mínimo 6 caracteres" />
-          </div>
-          
-          <div class="field">
-            <label>Confirmar Password *</label>
-            <input type="password" id="new_admin_password_confirm" placeholder="Repete a password" />
-          </div>
-          
-          <div class="field">
-            <label>Telefone</label>
-            <input id="new_admin_phone" placeholder="+351 ..." />
-          </div>
-          
-          <div style="background:rgba(59,130,246,0.1);padding:12px;border-radius:8px;margin-top:16px;">
-            <div style="font-size:13px;line-height:1.6;">
-              <strong style="color:#1e40af;">🔒 Importante:</strong>
-              <ul style="margin:8px 0 0 0;padding-left:20px;">
-                <li>Guarda bem estas credenciais</li>
-                <li>Serás o administrador principal</li>
-                <li>Poderás criar outros utilizadores depois</li>
-              </ul>
-            </div>
-          </div>
-        `,
-        'Criar Administrador',
-        async () => {
-          const name = byId('new_admin_name').value.trim();
-          const email = byId('new_admin_email').value.trim().toLowerCase();
-          const password = byId('new_admin_password').value;
-          const passwordConfirm = byId('new_admin_password_confirm').value;
-          const phone = byId('new_admin_phone').value.trim();
-          
-          // Validações
-          if (!name || !email || !password) {
-            return toast('❌ Preenche todos os campos obrigatórios');
-          }
-          
-          if (password.length < 6) {
-            return toast('❌ Password deve ter no mínimo 6 caracteres');
-          }
-          
-          if (password !== passwordConfirm) {
-            return toast('❌ As passwords não coincidem');
-          }
-          
-          // Criar admin
-          app.state.users.push({
-            id: uid(),
-            name: name,
-            email: email,
-            password: password,
-            role: 'admin',
-            unit: 'Administração',
-            active: true,
-            phone: phone,
-            nif: '',
-            quota: 0,
-            permilagem: 0
-          });
-          
-          await saveState(app.state, 'Criação do primeiro administrador');
-          
-          closeModal();
-          toast('✅ Administrador criado com sucesso!');
-          
-          // Mostrar mensagem de sucesso
-          setTimeout(() => {
-            alert('✅ Administrador criado!\n\n' +
-                  'Email: ' + email + '\n\n' +
-                  'Podes fazer login agora.');
-            app.render();
-          }, 300);
-        }
-      );
     }
     
     async function restoreFromGDrive(fileId) {
